@@ -478,17 +478,6 @@ F 3 "~" H 6000 2150 50  0001 C CNN
 	1    6000 2150
 	0    -1   1    0   
 $EndComp
-$Comp
-L power:GND #PWR011
-U 1 1 5F218CFB
-P 6350 2150
-F 0 "#PWR011" H 6350 1900 50  0001 C CNN
-F 1 "GND" V 6355 2022 50  0000 R CNN
-F 2 "" H 6350 2150 50  0001 C CNN
-F 3 "" H 6350 2150 50  0001 C CNN
-	1    6350 2150
-	0    -1   -1   0   
-$EndComp
 Wire Wire Line
 	6150 2150 6350 2150
 Wire Wire Line
@@ -513,7 +502,7 @@ Connection ~ 5100 2750
 Wire Wire Line
 	5100 2750 5200 2750
 Wire Wire Line
-	6000 2300 6000 2850
+	6000 2300 6000 2500
 Connection ~ 6000 2850
 Wire Wire Line
 	6000 2850 6400 2850
@@ -639,4 +628,11 @@ Wire Wire Line
 	2000 1850 2000 1750
 Wire Wire Line
 	9450 5850 8500 5850
+Wire Wire Line
+	6350 2150 6350 2500
+Wire Wire Line
+	6350 2500 6000 2500
+Connection ~ 6000 2500
+Wire Wire Line
+	6000 2500 6000 2850
 $EndSCHEMATC

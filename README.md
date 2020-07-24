@@ -19,7 +19,7 @@ The feature set of the Open Amiga Sampler will be:
 * 8bit sample resolution
 * Mono
 * Typical maximum sampling rate of ~52Khz
-* Amplifier with variable gain
+* Preamp with variable gain
 
 In this document we'll explain how the OAS works, why and how we developed it, why we've chosen specs which appear to be lower than even the cheap samplers of the Amiga's heyday, and why that's actually a good thing!
 

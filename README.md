@@ -112,6 +112,8 @@ Our benchmark in terms of application, or what it should be possible to use this
 
 ### What next?
 
+<img src="img/oas_pcb.jpg">
+
 We now have circuit boards designed, made, populated and tested! Results are good: with OAS at a healthy gain just short of clipping, and with a short repeating source loop at a fixed professional line level (2 bars of a liquid drum and bass track containing sub-bass, complex synth pads, lead synths and crispy hi-hats), the sampled audio is considerably louder than that from a Techno Sound Turbo and also has much better low and high frequency response. High frequency response is never going to be amazing with an 8bit sampler, but it should be possible to get decent low frequency response - often it's preferable to use a short sinewave 'chip' sample (ie ~64bytes) because sampling sub bass can give such poor results, but even in the context of a full mix the OAS delivers way more below 115hz than the Techno Sound Turbo. We haven't done a comparison test against the Stereo Master because it's objectively much worse than the Techno Sound Turbo anyway :) The next test we'd like to do is against a GVP DSS8+ which, since it also has a built-in preamp (albeit software rather than hardware controlled), is more likely to give OAS a run for its money. But those samplers are very rare these days and expensive when they do appear on the second hand market, so we feel we've achieved our goal already!
 
 The case design is nearly complete and prototype 3D prints are looking good. A SCAD file is included in this repo if you want to make your own, or tweak the design to your own requirements. Stay tuned for updates!

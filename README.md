@@ -19,7 +19,7 @@ The feature set of the Open Amiga Sampler will be:
 * 8bit sample resolution
 * Mono
 * Typical maximum sampling rate of ~52Khz
-* Preamp with variable gain
+* Amplifier with variable gain
 
 In this document we'll explain how the OAS works, why and how we developed it, why we've chosen specs which appear to be lower than even the cheap samplers of the Amiga's heyday, and why that's actually a good thing!
 
@@ -112,4 +112,6 @@ Our benchmark in terms of application, or what it should be possible to use this
 
 ### What next?
 
-Well, now that we've got a Teensy that behaves like an Amiga's parallel port we're interested in making a Teensy behave like a parallel port sampler. The plan is for a Teensy (or similar microcontroller dev board) with an SD card full of audio sample files to respond to an Amiga's STROBE signals and write data from those samples, byte by byte, to its output pins. It might even be possible to read and output a range of audio formats using Teensy audio libraries. The Teensy would loop playback of a sound, with physical buttons for navigating through samples, and the Amiga would read them. With careful sample prep, and perhaps modern bit-conversion techniques like adaptive dithering and noise shaping, his _could_ be a way to get the absolute best 8bit sampling on an Amiga!
+We now have circuit boards designed, made, populated and tested! Results are good: with OAS at a healthy gain just short of clipping, and with a short repeating source loop at a fixed professional line level (2 bars of a liquid drum and bass track containing sub-bass, complex synth pads, lead synths and crispy hi-hats), the sampled audio is considerably louder than that from a Techno Sound Turbo and also has much better low and high frequency response. High frequency response is never going to be amazing with an 8bit sampler, but it should be possible to get decent low frequency response - often it's preferable to use a short sinewave 'chip' sample (ie ~64bytes) because sampling sub bass can give such poor results, but even in the context of a full mix the OAS delivers way more below 115hz than the Techno Sound Turbo. We haven't done a comparison test against the Stereo Master because it's objectively much worse than the Techno Sound Turbo anyway :) The next test we'd like to do is against a GVP DSS8+ which, since it also has a built-in preamp (albeit software rather than hardware controlled), is more likely to give OAS a run for its money. But those samplers are very rare these days and expensive when they do appear on the second hand market, so we feel we've achieved our goal already!
+
+The case design is nearly complete and prototype 3D prints are looking good. A SCAD file is included in this repo if you want to make your own, or tweak the design to your own requirements. Stay tuned for updates!

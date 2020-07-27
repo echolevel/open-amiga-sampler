@@ -2,8 +2,8 @@
 
 ## Overview
 
-Here you can find the KiCAD files for Open Amiga Sampler. There is a schematic and a PCB layout.
-The schematic consists of an inverting opamp circuit with variable gain which feeds an ADC. The DB25's strobe pin is connected to the ADC and initiates a conversion when it goes low. The ADC's outputs are connected to the data pins of a DB25 connector, which also provides power and ground. 
+Here you can find the schematic and a PCB layout for Open Amiga Sampler in KiCAD format. Additionally, the schematic is available as a PDF.
+The design consists of an inverting opamp circuit with variable gain which feeds an ADC. The DB25's strobe pin is connected to the ADC and initiates a conversion when it goes low. The ADC's outputs are connected to the data pins of a DB25 connector, which also provides power and ground. 
 
 ## BOM
 

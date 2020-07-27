@@ -15,11 +15,11 @@ The common features of these cheap sampler carts were:
 * Typical maximum sampling rate of ~55Khz in mono (~37Khz for stereo)
 * Usually claimed to feature impressive SNR, anti-aliasing filters, and special ~90Khz frequency modes (_sometimes_ these claims were even true!)
 
-The feature set of the Open Amiga Sampler will be:
+The feature set of the Open Amiga Sampler is:
 * 8bit sample resolution
 * Mono
 * Typical maximum sampling rate of ~52Khz
-* Amplifier with variable gain
+* Input amplifier with variable gain
 
 In this document we'll explain how the OAS works, why and how we developed it, why we've chosen specs which appear to be lower than even the cheap samplers of the Amiga's heyday, and why that's actually a good thing!
 
@@ -41,7 +41,7 @@ Another reason is that one of us fried a cart years ago, and we thought it would
 
 The way these samplers work is no great mystery, and it's precisely because their manufacture was so mercilessly low-cost that they're relatively easy to understand. Most of them contain a small PCB with an 8bit AD (analogue to digital) converter chip, a switching chip that's controlled by voltage (usually a quad bilateral switch), a couple of resistors and capacitors, and a 25-pin parallel port connector. That's all! The AD chip is 8bit/mono and capable of being driven at fairly high speeds - considerably faster than most Amigas would be able to drive it.
 
-If the chip is mono, wouldn't you need two for stereo? Nope, that's what the switch is for: read a sample from the left channel, then use the switch to send the right channel to the AD, read another sample, switch back, and so on. Sounds like an exercise in cost cutting, and it _is_, but since the Amiga's parallel port can only read 8 bits of data at a time, the luxury of dual AD chips wouldn't actually help (that's why some samplers got higher bitrates by simultaneously sending extra bits of data through the serial or joystick ports and adding them together in software to get e.g. 12, 14 or 16bit audio).
+If the chip is mono, wouldn't you need two for stereo? Nope, that's what the switch is for: first read a sample byte from the left channel, then use the switch to send the right channel to the AD, read another sample, switch back, and so on. Sounds like an exercise in cost cutting, and it _is_, but since the Amiga's parallel port can only read 8 bits of data at a time, the luxury of dual AD chips wouldn't actually help (that's why some samplers got higher bitrates by simultaneously sending extra bits of data through the serial or joystick ports and adding them together in software to get e.g. 12, 14 or 16bit audio).
 
 We'll not concern ourselves here with _how_ the AD chip converts analogue audio input into 8bit digital output (if you're interested, check out some datasheets for chips like the ZN449, the AD7576 or the ADC0820 which detail their internal circuitry). We're more interested in how to control these chips - to instruct them to start a conversion (a 'sample' of the incoming audio), write the resulting byte to its output data pins, and then do it all over again really fast: as many times per second as our desired sample rate. Oh, and specifically, how to do that with an Amiga!
 
@@ -59,10 +59,39 @@ So the bare minimum the Amiga needs to do is to read bytes and send STROBE pulse
 
 Some Amiga software lets you use a slider to choose an arbitrary sample rate, whereas Protracker samples at the 'note' of your choice between C-1 and B-3. The note references a lookup table of sample periods, which divide e.g. a PAL Amiga's clock rate of 3546895hz (NOT the processor _speed_ which varies from model to model) to calculate an interrupt frequency that serves as the sample rate. For example, the note A-1 with a finetune offset of 0 has a period of 508, so 3546895/508 = 6982.07Hz, so if you want a sample rate of about 7Khz, you sample at Protracker note A-1. YES, THAT'S WEIRD. Protracker's weird. Amazing and beautiful and weird. The external sound source that you sample at 'note A-1' doesn't have to be a real-world A-1 note (which would have a frequency of 55Hz, as it happens). It could be anything. So assuming your sound source is playing at the pitch you want to record, the PT note at which you sample is just a metric of sample rate and a way of deciding your preferred quality-to-filesize ratio. Oh, and remember I mentioned PAL? That clock rate is different on NTSC machines which means that, you guessed it, pitches are all slightly different  If all this makes _sort of_ but not _complete_ sense, welcome to Protracker!
 
-That's almost all you need to know about the Amiga's parallel port - but not quite. There's also a WARNING!
+
+### But...but...why can't sampler carts do 55Khz in trackers?
+
+"But why don't most sample trackers let you record and play at the highest sample rates the hardware can support? Why are they limited to 28603Hz (PAL) and 28867Hz (NTSC), rather than say 55Khz or higher? After all, most samplers' bundled sampling programs could do that!", we hear you ask. Well, there are a couple of things going on here.
+
+Firstly, those figures of 28603Hz (28.6Khz) and 28867Hz (28.8Khz) are important because while the theoretical maximum sample rate of Paula (ie the rate at which its PWM output can switch on and off) is about 31Khz, there are some limitations imposed by the chipset internals of the Amiga - detailed on page 260, Appendix A of the Amiga Hardware Reference Manual if you want to dive even deeper. Each Paula channel's playback frequency is derived from the system's clock speed (not the CPU clock, but the master clock from which all custom chips and the CPU derive their speeds) which is 3546895Hz on PAL systems and 3579545Hz on NTSC systems. This clock speed is divided by a value from a look-up table of 'periods' - ie PWM interrupt intervals - which correspond with the desired audio playback sample rate. What do PAL and NTSC have to do with it? More on that later.
+
+It _is_ possible to play back audio data at sample rates higher than those practical limits, and most trackers have a few entries in their note period look-up tables that correspond to such rates (generally A-3, A#3 and B-3), but you should expect results to be unpredictable and probably way out of tune with notes further down the scale. That doesn't mean they're useless - those notes and their commensurate high quality can still be useful for unpitched stuff like snares or hi-hats, or even for melodic/harmonic content that never needs to change pitch, but if your channel effects ever raise the pitch (vibrato or arpeggio for example) then horrible things will probably happen to your ears. And if not yours, then probably somebody else's when they listen to your module on a different system. On a PAL machine, A-3 is 27.928Khz and A#3, a semitone up, is 29.557Khz; the aforementioned practical limit falls between these semitones, so your realistic upper limit when tracking should be A-3, and perhaps even G-3 to be safe.
+
+Secondly, those references to PAL and NTSC timing remind us that everything about the Amiga's custom chip architecture, and the rates at which those custom chips' DMA runs, is linked to video display timing. It's an ideological relic of the Amiga's time, and it's why the system was so great at what it did. So if you've used sampler carts in the past, especially with their bundled sampling programs, you'll remember that it was possible to record and play back EXTREMELY high-quality audio - in sample rate terms, at least. But you'll also remember that the screen went blank or froze both when recording and replaying in these high quality modes. And even in Protracker the screen goes blank when doing the actual recording (not monitoring) of a sample.
+
+Each Paula channel gets one DMA slot per horizontal display scanline, so to monitor (without recording) incoming sampler audio, most programs can continue to update their graphics while playing back that incoming sound _and_ doing some basic analysis on the signal to display waveform scopes or VU meters. But in order to record, including at rates higher than our 'limit', the screenmode has to be changed to one that performs horizontal scans at a rate which allows Paula DMA access at a higher frequency. To play back these samples, programs like TechnoSound Turbo, MegaloSound, MasterSound etc. also need to change their display modes and blank/freeze their screens because playback in the program's default displaymode would be limited to ~28Khz and so the sample would sound waaaaay downpitched, usually by around an octave.
+
+So we're sure you're ahead of us on this: trackers don't care about anything that exceeds the ~28Khz limit, because trackers are for composing modules which need to be replayable alongside games, demos, cracktros and the like without forcing those programs to change screenmodes or blank/freeze their screens; they also need to use all 4 channels independently, so can't double up for crazy 14bit playback tricks or whatever. If you sample an instrument in MegaloSound at the highest possible mono samplerate (let's say ~55Khz) and load that sample in ProTracker, even playing B-3 on the keyboard will sound about an octave lower than you expect. To get it to sound right you'll have to upsample it by an octave...which discards every other sample so you can play back at a higher frequency...and now you've lost half the sample information, the sample is around 28Khz, and you might as well have sampled at 28Khz in ProTracker in the first place :D
+
+So...that was a long and rambling but hopefully edifying explanation for why - although it's possible to sample at rates way in excess of CD quality - the safe, everyday, practical upper limit of any Amiga sampler cart if you're a tracker musician is pretty much A-3.
+
+### Ok...well what about sampling duration? Why's it so short in trackers?
+
+Like the previous question, this pertains to all sample carts (not just ours) but unlike the previous question, it's much more straightforward to answer.
+
+You'll have noticed that when sampling at e.g. tracker note A-3 (which we've established is usually the highest note/sample rate that you'll want to use for anything melodic/pitched) you get only a few seconds before sampling ends and you're dropped back to the main screen. But you've got acres of chip mem available! Entire continents of fast ram! All those old bundled sampler programs let you program at higher rates than this for aaaages!
+
+Well, this is partly a limitation of the MOD format - established by Karsten Obarski for SoundTracker and then refined slightly over the years by successive NoiseTracker and ProTracker coders. Almost all MOD trackers will cut off sampling just before it hits 64KB (even though the format can technically support 128KB - but that's another story). It is what it is; we're not entirely sure why this limitation exists, but we're used to working around it and so is everyone who's ever composed a module.
+
+You might find that sampler programs suit your workflow better, in that you prefer to record a much longer duration in one go and then save out selected chunks for loading into ProTracker later (ProTracker and its fellows will just read the first 64KB of a >64KB sample and discard the remainder, so don't worry about overloading it with samples that are too big). Or you can get used to doing what we do: looping your source material on whatever device you're sampling _from_ and having a quick mouse-trigger-finger on the Amiga's record button.
+
+But remember: even with the dedicated sampling programs you'll eventually run up against the limit of your system's chip mem - the main Amiga RAM type that's optimised for fast DMA access by the custom chips. Unless a program does some fiendish and CPU-intensive data juggling, most sampling programs won't be able to use your fast mem for this, so beware of splashing cash on fast RAM expansions if all you want to do is tracking. Find out much more about different Amiga RAM types and what they mean for ProTracker by reading [the guide I wrote in bootPT's documentation](https://github.com/echolevel/bootPT#the-protracker-users-guide-to-amiga-ram-types-limitations-and-expansions).
 
 
-### WARNING
+### :warning: WARNING
+
+That's almost all you need to know about the Amiga's parallel port and sampling capabilities - but not quite. There's also a WARNING!
 
 It is quite easy to KILL AN AMIGA by doing unexpected things to its parallel port. Specifically, you're likely to kill one of your Amiga's CIA (Complex Interface Adapter) chips and they're both expensive and difficult to replace in A1200 and A600 machines. They're easier to replace in an A500/+, but still expensive. Samplers use the parallel port, so take lots of care. ABSOLUTELY DO NOT:
 * plug in a parallel port sampler, or any other parallel port device, while the Amiga is turned on
@@ -107,7 +136,23 @@ How did most of the original cheap samplers handle mono sampling from a stereo i
 
 We haven't tried to make the BEST sampler, but the general benchmark we had in mind was that it should sound at least as good as a Techno Sound Turbo, and hopefully a little better. Lower/mid-range samplers like the GVP DSS8+ incorporated preamp circuits and ADCs with allegedly better SNR performance, and while we haven't the information or the means to clone these directly, we are implementing a filter and preamp circuit of our own to hopefully improve SNR. Higher-end samplers, as discussed earlier, use various port tricks to achieve higher bitrates and (on accelerated Amigas) higher sample rates but they're often operating outside the ability of a stock Amiga to replay those samples usefully.
 
-Our benchmark in terms of application, or what it should be possible to use this sampler for, is that it should work with most versions of Protracker, OctaMED, and similar trackers. Working with popular audio packages such as Audiomaster II and even some of the software that came bundled with the original commercial samplers, now largely in the public domain, is a bonus - but usually cheap samplers will work in most of these apps when treated as generic sampling devices and so should ours. Typically if a sampler-specific app has an option for controlling a special feature of that app, it'll use the PAPER_OUT and SELECT pins of the Amiga's parallel port to send custom messages and these will usually be ignored by a third-party sampler such as ours. So far, compatibility is high - but again, trackers are the critical thing, and anything else is a bonus.
+Our benchmark in terms of application, or what it should be possible to use this sampler for, is that it should work with most versions of Protracker, OctaMED, and similar trackers. Working with popular audio packages such as Audiomaster II and even some of the software that came bundled with the original commercial samplers, now largely in the public domain, is a bonus - but usually cheap samplers will work in most of these apps when treated as generic sampling devices and so should ours. Typically if a sampler-specific app has an option for controlling a special feature of that app, it'll use the PAPER_OUT and SELECT pins of the Amiga's parallel port to send custom messages and these will usually be ignored by a third-party sampler such as ours. So far, compatibility is high - but again, trackers are the critical use case and anything else is a bonus.
+
+### Software compatibility table (work in progress, submissions welcome)
+
+_TL;DR The OAS works with most sampling programs and sample trackers, and in future this table will probably be more useful as a list of
+anomalies which don't, or software that's exclusively targeted at proprietary hardware. As a rule, anything that works with a MasterSound, a StereoMaster, a TechnoSound Turbo, a MegaloSound, or any other low-to-mid range 8bit sampler will probably work with the OAS._
+
+| Software | OAS rev. | Works? | Notes |
+| -------- | -------- | -------|------ |
+| ProTracker 1.2/2.3D/2.3F | 0.1 | :heart: | |
+| AudioMaster III | 0.1 | :heart: | |
+| MasterSound v1.1 | 0.1 | :heart: | |
+| MED v3.22 | 0.1 | :heart: | |
+| TrashTracker | 0.1 | :heart: | |
+| MegaloSound 1.39 | 0.1 | :heart: | |
+| StereoMaster 1.1 | 0.1 | :heart: | |
+
 
 
 ### What next?

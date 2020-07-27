@@ -76,7 +76,38 @@ So we're sure you're ahead of us on this: trackers don't care about anything tha
 
 So...that was a long and rambling but hopefully edifying explanation for why - although it's possible to sample at rates way in excess of CD quality - the safe, everyday, practical upper limit of any Amiga sampler cart if you're a tracker musician is pretty much A-3.
 
-### Ok...well what about sampling duration? Why's it so short in trackers?
+Here's a table of ProTracker's notes, note period values, and corresponding PAL and NTSC sample rates (rounded to nearest). You can also finetune up or down by 8 increments between semitones (aka half-steps), so for a comprehensive table of all the intermediate periods check out [the Protracker page on exotica.org.uk](https://www.exotica.org.uk/wiki/Protracker). It's just a quick reference to give you an idea of which PT note will give you which sample rate - don't rely on it for any serious maths!
+
+###### Octave 1
+
+PAL 3546895
+NTSC 3579545
+
+| PT Note | C-1 | C#1 | D-1 | D#1 | E-1 | F-1 | F#1 | G-1 | G#1 | A-1 | A#1 | B-1 |
+|    ---  | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| PT Period | 856 | 808 | 762 | 720 | 678 | 640 | 604 | 570 | 538 | 508 | 480 | 453
+| PAL sample rate | 4144|4390|4655|4926|5231|5542|5872|6223|6593|6982|7389|7830
+| NTSC sample rate |4182|4430|4698|4972|5280|5593|5926|6280|6653|7046|7457|7902
+
+###### Octave 2
+
+| PT Note | C-2 | C#2 | D-2 | D#2 | E-2 | F-2 | F#2 | G-2 | G#2 | A-2 | A#2 | B-2 |
+|    ---  | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| PT Period | 428 | 404 | 381 | 360 | 339 | 320 | 302 | 285 | 269 | 254 | 240 | 226
+| PAL sample rate |8287|8779|9309|9852|10463|11084|11745|12445|13185|13964|14779|15694
+| NTSC sample rate |8363|8860|9395|9943|10559|11186|11853|12560|13307|14093|14915|15839
+
+###### Octave 3
+
+| PT Note | C-3 | C#3 | D-3 | D#3 | E-3 | F-3 | F#3 | G-3 | G#3 | A-3 | A#3 | B-3 |
+|    ---  | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| PT Period | 214 | 202 | 190 | 180 | 170 | 160 | 151 | 143 | 135 | 127 | 120 | 113
+| PAL sample rate |16574|17559|18668|19705|20864|22168|23489|24803|26273|27928|29557|31388
+| NTSC sample rate |16727|17721|18840|19886|21056|22372|23706|25032|26515|28185|29830|31677
+
+
+
+### Ok...well what about sampling duration? Why's it so short when sampling in trackers?
 
 Like the previous question, this pertains to all sample carts (not just ours) but unlike the previous question, it's much more straightforward to answer.
 
@@ -138,7 +169,13 @@ We haven't tried to make the BEST sampler, but the general benchmark we had in m
 
 Our benchmark in terms of application, or what it should be possible to use this sampler for, is that it should work with most versions of Protracker, OctaMED, and similar trackers. Working with popular audio packages such as Audiomaster II and even some of the software that came bundled with the original commercial samplers, now largely in the public domain, is a bonus - but usually cheap samplers will work in most of these apps when treated as generic sampling devices and so should ours. Typically if a sampler-specific app has an option for controlling a special feature of that app, it'll use the PAPER_OUT and SELECT pins of the Amiga's parallel port to send custom messages and these will usually be ignored by a third-party sampler such as ours. So far, compatibility is high - but again, trackers are the critical use case and anything else is a bonus.
 
-### Software compatibility table (work in progress, submissions welcome)
+### What about those edge cases? Who is OAS _not_ aimed at?
+
+We're sure there are Amiga users out there who don't use trackers and perhaps aren't interested in the sound quality compromises that trackers require composers to make. We feel that anybody who uses their Amiga for 12, 14 or 16-bit sampling, perhaps in stereo with a view to high-quality or mixed-stereo playback on an accelerated machine, and maybe even through a clockport or Zorro sound card that uses the AHI drivers and bypasses Paula's DMA channels (other than to drive its PWM output), is not the target user for this device! Chances are they already have the equipment they need; we don't seek to diminish what they do, nor insult them by pretending our design is any use to them, and we wish them well! Indeed constructing a setup like that is quite an achievement, considering the scarcity of Delfina, Toccata and similar high-end sound cards. Some people even use a Mediator busboard so they can run Soundblaster 16s and other PCI cards of the era!
+
+So if you've got this far through the documentation, it shouldn't be a surprise that we're not even pretending to offer that kind of quality or cater to that adjacent - but very different - use case :)
+
+### How compatible is OAS with existing software? (work in progress, submissions welcome)
 
 _TL;DR The OAS works with most sampling programs and sample trackers, and in future this table will probably be more useful as a list of
 anomalies which don't, or software that's exclusively targeted at proprietary hardware. As a rule, anything that works with a MasterSound, a StereoMaster, a TechnoSound Turbo, a MegaloSound, or any other low-to-mid range 8bit sampler will probably work with the OAS._
@@ -158,6 +195,7 @@ anomalies which don't, or software that's exclusively targeted at proprietary ha
 ### What next?
 
 <img src="img/oas_pcb.jpg">
+
 
 We now have circuit boards designed, made, populated and tested! Results are good: with OAS at a healthy gain just short of clipping, and with a short repeating source loop at a fixed professional line level (2 bars of a liquid drum and bass track containing sub-bass, complex synth pads, lead synths and crispy hi-hats), the sampled audio is considerably louder than that from a Techno Sound Turbo and also has much better low and high frequency response. High frequency response is never going to be amazing with an 8bit sampler, but it should be possible to get decent low frequency response - often it's preferable to use a short sinewave 'chip' sample (ie ~64bytes) because sampling sub bass can give such poor results, but even in the context of a full mix the OAS delivers way more below 115hz than the Techno Sound Turbo. We haven't done a comparison test against the Stereo Master because it's objectively much worse than the Techno Sound Turbo anyway :) The next test we'd like to do is against a GVP DSS8+ which, since it also has a built-in preamp (albeit software rather than hardware controlled), is more likely to give OAS a run for its money. But those samplers are very rare these days and expensive when they do appear on the second hand market, so we feel we've achieved our goal already!
 

@@ -4,6 +4,21 @@
 
 ![samplers](img/samplers.jpg)
 
+### Contents
+
+* [What are Amiga samplers?](#what-are-amiga-samplers)
+* [Why build more?](#why-build-more)
+* [How do they work?](#how-do-they-work)
+* [WARNING](#warning-warning)
+* [That sounds serious. How did you test your design without risking your Amiga hardware?](#that-sounds-serious-how-did-you-test-your-design-without-risking-your-amiga-hardware)
+* [So why is your new sampler design mono, not stereo?](#so-why-is-your-new-sampler-design-mono-not-stereo)
+* [What's the aim in terms of quality and application?](#whats-the-aim-in-terms-of-quality-and-application)
+* [What about those edge cases? Who is OAS _not_ aimed at?](#what-about-those-edge-cases-who-is-oas-not-aimed-at)
+* [How compatible is OAS with existing software?](#how-compatible-is-oas-with-existing-software-work-in-progress-submissions-welcome)
+* [What next?](#what-next)
+* [Appendix A: Sample rates deep-dive](#butbutwhy-cant-sampler-carts-do-55khz-in-trackers)
+* [Appendix B: Sampling duration deep-dive](#okwell-what-about-sampling-duration-whys-it-so-short-when-sampling-in-trackers)
+
 ### What are Amiga samplers?
 Over the course of the Commodore Amiga's active lifespan, a great many samplers (also known variously as sampler carts/cartridges, sound cards, audio digitisers, audio interfaces, etc) were manufactured to exploit audio capabilities that were unmatched by any other home computer of its time. In 1989 an Amiga 500 with a cheap 8bit parallel-port sampler gave you the means to produce professional sounding music in your bedroom for a few hundred pounds - about the same as it cost to hire a recording studio for a few days. Acid house and techno were exploding; hardcore, jungle and drum'n'bass were just around the corner. Even if your sample-based Amiga music wasn't quite professional sounding by the standards of audiophiles and hi-fi enthusiasts and the old-fashioned music industry, it was probably good enough for underground clubs and illegal raves! Countless dance, bass and electronic music superstars got their start with an Amiga and a cheap sampler.
 
@@ -58,66 +73,6 @@ That's it! But that's no good - we've only got one sample byte, and it's either 
 So the bare minimum the Amiga needs to do is to read bytes and send STROBE pulses at some arbitrary fixed rate. That rate, according to the Nyquist–Shannon sampling theorem, should be greater than double the highest frequency you want human ears to be able to hear, but it also needs to be lower than the highest sample rate the Amiga is capable of playing back - so between about 8Khz and 40Khz is what most Amiga musicians will use in normal circumstances.
 
 Some Amiga software lets you use a slider to choose an arbitrary sample rate, whereas Protracker samples at the 'note' of your choice between C-1 and B-3. The note references a lookup table of sample periods, which divide e.g. a PAL Amiga's clock rate of 3546895hz (NOT the processor _speed_ which varies from model to model) to calculate an interrupt frequency that serves as the sample rate. For example, the note A-1 with a finetune offset of 0 has a period of 508, so 3546895/508 = 6982.07Hz, so if you want a sample rate of about 7Khz, you sample at Protracker note A-1. YES, THAT'S WEIRD. Protracker's weird. Amazing and beautiful and weird. The external sound source that you sample at 'note A-1' doesn't have to be a real-world A-1 note (which would have a frequency of 55Hz, as it happens). It could be anything. So assuming your sound source is playing at the pitch you want to record, the PT note at which you sample is just a metric of sample rate and a way of deciding your preferred quality-to-filesize ratio. Oh, and remember I mentioned PAL? That clock rate is different on NTSC machines which means that, you guessed it, pitches are all slightly different  If all this makes _sort of_ but not _complete_ sense, welcome to Protracker!
-
-
-### But...but...why can't sampler carts do 55Khz in trackers?
-
-"But why don't most sample trackers let you record and play at the highest sample rates the hardware can support? Why are they limited to 28603Hz (PAL) and 28867Hz (NTSC), rather than say 55Khz or higher? After all, most samplers' bundled sampling programs could do that!", we hear you ask. Well, there are a couple of things going on here.
-
-Firstly, those figures of 28603Hz (28.6Khz) and 28867Hz (28.8Khz) are important because while the theoretical maximum sample rate of Paula (ie the rate at which its PWM output can switch on and off) is about 31Khz, there are some limitations imposed by the chipset internals of the Amiga - detailed on page 260, Appendix A of the Amiga Hardware Reference Manual if you want to dive even deeper. Each Paula channel's playback frequency is derived from the system's clock speed (not the CPU clock, but the master clock from which all custom chips and the CPU derive their speeds) which is 3546895Hz on PAL systems and 3579545Hz on NTSC systems. This clock speed is divided by a value from a look-up table of 'periods' - ie PWM interrupt intervals - which correspond with the desired audio playback sample rate. What do PAL and NTSC have to do with it? More on that later.
-
-It _is_ possible to play back audio data at sample rates higher than those practical limits, and most trackers have a few entries in their note period look-up tables that correspond to such rates (generally A-3, A#3 and B-3), but you should expect results to be unpredictable and probably way out of tune with notes further down the scale. That doesn't mean they're useless - those notes and their commensurate high quality can still be useful for unpitched stuff like snares or hi-hats, or even for melodic/harmonic content that never needs to change pitch, but if your channel effects ever raise the pitch (vibrato or arpeggio for example) then horrible things will probably happen to your ears. And if not yours, then probably somebody else's when they listen to your module on a different system. On a PAL machine, A-3 is 27.928Khz and A#3, a semitone up, is 29.557Khz; the aforementioned practical limit falls between these semitones, so your realistic upper limit when tracking should be A-3, and perhaps even G-3 to be safe.
-
-Secondly, those references to PAL and NTSC timing remind us that everything about the Amiga's custom chip architecture, and the rates at which those custom chips' DMA runs, is linked to video display timing. It's an ideological relic of the Amiga's time, and it's why the system was so great at what it did. So if you've used sampler carts in the past, especially with their bundled sampling programs, you'll remember that it was possible to record and play back EXTREMELY high-quality audio - in sample rate terms, at least. But you'll also remember that the screen went blank or froze both when recording and replaying in these high quality modes. And even in Protracker the screen goes blank when doing the actual recording (not monitoring) of a sample.
-
-Each Paula channel gets one DMA slot per horizontal display scanline, so to monitor (without recording) incoming sampler audio, most programs can continue to update their graphics while playing back that incoming sound _and_ doing some basic analysis on the signal to display waveform scopes or VU meters. But in order to record, including at rates higher than our 'limit', the screenmode has to be changed to one that performs horizontal scans at a rate which allows Paula DMA access at a higher frequency. To play back these samples, programs like TechnoSound Turbo, MegaloSound, MasterSound etc. also need to change their display modes and blank/freeze their screens because playback in the program's default displaymode would be limited to ~28Khz and so the sample would sound waaaaay downpitched, usually by around an octave.
-
-So we're sure you're ahead of us on this: trackers don't care about anything that exceeds the ~28Khz limit, because trackers are for composing modules which need to be replayable alongside games, demos, cracktros and the like without forcing those programs to change screenmodes or blank/freeze their screens; they also need to use all 4 channels independently, so can't double up for crazy 14bit playback tricks or whatever. If you sample an instrument in MegaloSound at the highest possible mono samplerate (let's say ~55Khz) and load that sample in ProTracker, even playing B-3 on the keyboard will sound about an octave lower than you expect. To get it to sound right you'll have to upsample it by an octave...which discards every other sample so you can play back at a higher frequency...and now you've lost half the sample information, the sample is around 28Khz, and you might as well have sampled at 28Khz in ProTracker in the first place :D
-
-So...that was a long and rambling but hopefully edifying explanation for why - although it's possible to sample at rates way in excess of CD quality - the safe, everyday, practical upper limit of any Amiga sampler cart if you're a tracker musician is pretty much A-3.
-
-Here's a table of ProTracker's notes, note period values, and corresponding PAL and NTSC sample rates (rounded to nearest). You can also finetune up or down by 8 increments between semitones (aka half-steps), so for a comprehensive table of all the intermediate periods check out [the Protracker page on exotica.org.uk](https://www.exotica.org.uk/wiki/Protracker). It's just a quick reference to give you an idea of which PT note will give you which sample rate - don't rely on it for any serious maths!
-
-###### Octave 1
-
-PAL 3546895
-NTSC 3579545
-
-| PT Note | C-1 | C#1 | D-1 | D#1 | E-1 | F-1 | F#1 | G-1 | G#1 | A-1 | A#1 | B-1 |
-|    ---  | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| PT Period | 856 | 808 | 762 | 720 | 678 | 640 | 604 | 570 | 538 | 508 | 480 | 453
-| PAL sample rate | 4144|4390|4655|4926|5231|5542|5872|6223|6593|6982|7389|7830
-| NTSC sample rate |4182|4430|4698|4972|5280|5593|5926|6280|6653|7046|7457|7902
-
-###### Octave 2
-
-| PT Note | C-2 | C#2 | D-2 | D#2 | E-2 | F-2 | F#2 | G-2 | G#2 | A-2 | A#2 | B-2 |
-|    ---  | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| PT Period | 428 | 404 | 381 | 360 | 339 | 320 | 302 | 285 | 269 | 254 | 240 | 226
-| PAL sample rate |8287|8779|9309|9852|10463|11084|11745|12445|13185|13964|14779|15694
-| NTSC sample rate |8363|8860|9395|9943|10559|11186|11853|12560|13307|14093|14915|15839
-
-###### Octave 3
-
-| PT Note | C-3 | C#3 | D-3 | D#3 | E-3 | F-3 | F#3 | G-3 | G#3 | A-3 | A#3 | B-3 |
-|    ---  | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| PT Period | 214 | 202 | 190 | 180 | 170 | 160 | 151 | 143 | 135 | 127 | 120 | 113
-| PAL sample rate |16574|17559|18668|19705|20864|22168|23489|24803|26273|27928|29557|31388
-| NTSC sample rate |16727|17721|18840|19886|21056|22372|23706|25032|26515|28185|29830|31677
-
-
-
-### Ok...well what about sampling duration? Why's it so short when sampling in trackers?
-
-Like the previous question, this pertains to all sample carts (not just ours) but unlike the previous question, it's much more straightforward to answer.
-
-You'll have noticed that when sampling at e.g. tracker note A-3 (which we've established is usually the highest note/sample rate that you'll want to use for anything melodic/pitched) you get only a few seconds before sampling ends and you're dropped back to the main screen. But you've got acres of chip mem available! Entire continents of fast ram! All those old bundled sampler programs let you program at higher rates than this for aaaages!
-
-Well, this is partly a limitation of the MOD format - established by Karsten Obarski for SoundTracker and then refined slightly over the years by successive NoiseTracker and ProTracker coders. Almost all MOD trackers will cut off sampling just before it hits 64KB (even though the format can technically support 128KB - but that's another story). It is what it is; we're not entirely sure why this limitation exists, but we're used to working around it and so is everyone who's ever composed a module.
-
-You might find that sampler programs suit your workflow better, in that you prefer to record a much longer duration in one go and then save out selected chunks for loading into ProTracker later (ProTracker and its fellows will just read the first 64KB of a >64KB sample and discard the remainder, so don't worry about overloading it with samples that are too big). Or you can get used to doing what we do: looping your source material on whatever device you're sampling _from_ and having a quick mouse-trigger-finger on the Amiga's record button.
-
-But remember: even with the dedicated sampling programs you'll eventually run up against the limit of your system's chip mem - the main Amiga RAM type that's optimised for fast DMA access by the custom chips. Unless a program does some fiendish and CPU-intensive data juggling, most sampling programs won't be able to use your fast mem for this, so beware of splashing cash on fast RAM expansions if all you want to do is tracking. Find out much more about different Amiga RAM types and what they mean for ProTracker by reading [the guide I wrote in bootPT's documentation](https://github.com/echolevel/bootPT#the-protracker-users-guide-to-amiga-ram-types-limitations-and-expansions).
 
 
 ### :warning: WARNING
@@ -200,3 +155,64 @@ anomalies which don't, or software that's exclusively targeted at proprietary ha
 We now have circuit boards designed, made, populated and tested! Results are good: with OAS at a healthy gain just short of clipping, and with a short repeating source loop at a fixed professional line level (2 bars of a liquid drum and bass track containing sub-bass, complex synth pads, lead synths and crispy hi-hats), the sampled audio is considerably louder than that from a Techno Sound Turbo and also has much better low and high frequency response. High frequency response is never going to be amazing with an 8bit sampler, but it should be possible to get decent low frequency response - often it's preferable to use a short sinewave 'chip' sample (ie ~64bytes) because sampling sub bass can give such poor results, but even in the context of a full mix the OAS delivers way more below 115hz than the Techno Sound Turbo. We haven't done a comparison test against the Stereo Master because it's objectively much worse than the Techno Sound Turbo anyway :) The next test we'd like to do is against a GVP DSS8+ which, since it also has a built-in preamp (albeit software rather than hardware controlled), is more likely to give OAS a run for its money. But those samplers are very rare these days and expensive when they do appear on the second hand market, so we feel we've achieved our goal already!
 
 The case design is nearly complete and prototype 3D prints are looking good. More on that soon!
+
+
+
+### Appendix A: Sample rates deep-dive
+
+"But why don't most sample trackers let you record and play at the highest sample rates the hardware can support? Why are they limited to 28603Hz (PAL) and 28867Hz (NTSC), rather than say 55Khz or higher? After all, most samplers' bundled sampling programs could do that!", we hear you ask. Well, there are a couple of things going on here.
+
+Firstly, those figures of 28603Hz (28.6Khz) and 28867Hz (28.8Khz) are important because while the theoretical maximum sample rate of Paula (ie the rate at which its PWM output can switch on and off) is about 31Khz, there are some limitations imposed by the chipset internals of the Amiga - detailed on page 260, Appendix A of the Amiga Hardware Reference Manual if you want to dive even deeper. Each Paula channel's playback frequency is derived from the system's clock speed (not the CPU clock, but the master clock from which all custom chips and the CPU derive their speeds) which is 3546895Hz on PAL systems and 3579545Hz on NTSC systems. This clock speed is divided by a value from a look-up table of 'periods' - ie PWM interrupt intervals - which correspond with the desired audio playback sample rate. What do PAL and NTSC have to do with it? More on that later.
+
+It _is_ possible to play back audio data at sample rates higher than those practical limits, and most trackers have a few entries in their note period look-up tables that correspond to such rates (generally A-3, A#3 and B-3), but you should expect results to be unpredictable and probably way out of tune with notes further down the scale. That doesn't mean they're useless - those notes and their commensurate high quality can still be useful for unpitched stuff like snares or hi-hats, or even for melodic/harmonic content that never needs to change pitch, but if your channel effects ever raise the pitch (vibrato or arpeggio for example) then horrible things will probably happen to your ears. And if not yours, then probably somebody else's when they listen to your module on a different system. On a PAL machine, A-3 is 27.928Khz and A#3, a semitone up, is 29.557Khz; the aforementioned practical limit falls between these semitones, so your realistic upper limit when tracking should be A-3, and perhaps even G-3 to be safe.
+
+Secondly, those references to PAL and NTSC timing remind us that everything about the Amiga's custom chip architecture, and the rates at which those custom chips' DMA runs, is linked to video display timing. It's an ideological relic of the Amiga's time, and it's why the system was so great at what it did. So if you've used sampler carts in the past, especially with their bundled sampling programs, you'll remember that it was possible to record and play back EXTREMELY high-quality audio - in sample rate terms, at least. But you'll also remember that the screen went blank or froze both when recording and replaying in these high quality modes. And even in Protracker the screen goes blank when doing the actual recording (not monitoring) of a sample.
+
+Each Paula channel gets one DMA slot per horizontal display scanline, so to monitor (without recording) incoming sampler audio, most programs can continue to update their graphics while playing back that incoming sound _and_ doing some basic analysis on the signal to display waveform scopes or VU meters. But in order to record, including at rates higher than our 'limit', the screenmode has to be changed to one that performs horizontal scans at a rate which allows Paula DMA access at a higher frequency. To play back these samples, programs like TechnoSound Turbo, MegaloSound, MasterSound etc. also need to change their display modes and blank/freeze their screens because playback in the program's default displaymode would be limited to ~28Khz and so the sample would sound waaaaay downpitched, usually by around an octave.
+
+So we're sure you're ahead of us on this: trackers don't care about anything that exceeds the ~28Khz limit, because trackers are for composing modules which need to be replayable alongside games, demos, cracktros and the like without forcing those programs to change screenmodes or blank/freeze their screens; they also need to use all 4 channels independently, so can't double up for crazy 14bit playback tricks or whatever. If you sample an instrument in MegaloSound at the highest possible mono samplerate (let's say ~55Khz) and load that sample in ProTracker, even playing B-3 on the keyboard will sound about an octave lower than you expect. To get it to sound right you'll have to upsample it by an octave...which discards every other sample so you can play back at a higher frequency...and now you've lost half the sample information, the sample is around 28Khz, and you might as well have sampled at 28Khz in ProTracker in the first place :D
+
+So...that was a long and rambling but hopefully edifying explanation for why - although it's possible to sample at rates way in excess of CD quality - the safe, everyday, practical upper limit of any Amiga sampler cart if you're a tracker musician is pretty much A-3.
+
+Here's a table of ProTracker's notes, note period values, and corresponding PAL and NTSC sample rates (rounded to nearest). You can also finetune up or down by 8 increments between semitones (aka half-steps), so for a comprehensive table of all the intermediate periods check out [the Protracker page on exotica.org.uk](https://www.exotica.org.uk/wiki/Protracker). It's just a quick reference to give you an idea of which PT note will give you which sample rate - don't rely on it for any serious maths!
+
+###### Octave 1
+
+PAL 3546895
+NTSC 3579545
+
+| PT Note | C-1 | C#1 | D-1 | D#1 | E-1 | F-1 | F#1 | G-1 | G#1 | A-1 | A#1 | B-1 |
+|    ---  | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| PT Period | 856 | 808 | 762 | 720 | 678 | 640 | 604 | 570 | 538 | 508 | 480 | 453
+| PAL sample rate | 4144|4390|4655|4926|5231|5542|5872|6223|6593|6982|7389|7830
+| NTSC sample rate |4182|4430|4698|4972|5280|5593|5926|6280|6653|7046|7457|7902
+
+###### Octave 2
+
+| PT Note | C-2 | C#2 | D-2 | D#2 | E-2 | F-2 | F#2 | G-2 | G#2 | A-2 | A#2 | B-2 |
+|    ---  | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| PT Period | 428 | 404 | 381 | 360 | 339 | 320 | 302 | 285 | 269 | 254 | 240 | 226
+| PAL sample rate |8287|8779|9309|9852|10463|11084|11745|12445|13185|13964|14779|15694
+| NTSC sample rate |8363|8860|9395|9943|10559|11186|11853|12560|13307|14093|14915|15839
+
+###### Octave 3
+
+| PT Note | C-3 | C#3 | D-3 | D#3 | E-3 | F-3 | F#3 | G-3 | G#3 | A-3 | A#3 | B-3 |
+|    ---  | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| PT Period | 214 | 202 | 190 | 180 | 170 | 160 | 151 | 143 | 135 | 127 | 120 | 113
+| PAL sample rate |16574|17559|18668|19705|20864|22168|23489|24803|26273|27928|29557|31388
+| NTSC sample rate |16727|17721|18840|19886|21056|22372|23706|25032|26515|28185|29830|31677
+
+
+
+### Appendix B: Sampling duration deep-dive
+
+"Ok...well what about sampling duration? Why's it so short when sampling in trackers?", we hear you ask. Like the previous question, this pertains to all sample carts (not just ours) but unlike the previous question, it's much more straightforward to answer.
+
+You'll have noticed that when sampling at e.g. tracker note A-3 (which we've established is usually the highest note/sample rate that you'll want to use for anything melodic/pitched) you get only a few seconds before sampling ends and you're dropped back to the main screen. But you've got acres of chip mem available! Entire continents of fast ram! All those old bundled sampler programs let you program at higher rates than this for aaaages!
+
+Well, this is partly a limitation of the MOD format - established by Karsten Obarski for SoundTracker and then refined slightly over the years by successive NoiseTracker and ProTracker coders. Almost all MOD trackers will cut off sampling just before it hits 64KB (even though the format can technically support 128KB - but that's another story). It is what it is; we're not entirely sure why this limitation exists, but we're used to working around it and so is everyone who's ever composed a module.
+
+You might find that sampler programs suit your workflow better, in that you prefer to record a much longer duration in one go and then save out selected chunks for loading into ProTracker later (ProTracker and its fellows will just read the first 64KB of a >64KB sample and discard the remainder, so don't worry about overloading it with samples that are too big). Or you can get used to doing what we do: looping your source material on whatever device you're sampling _from_ and having a quick mouse-trigger-finger on the Amiga's record button.
+
+But remember: even with the dedicated sampling programs you'll eventually run up against the limit of your system's chip mem - the main Amiga RAM type that's optimised for fast DMA access by the custom chips. Unless a program does some fiendish and CPU-intensive data juggling, most sampling programs won't be able to use your fast mem for this, so beware of splashing cash on fast RAM expansions if all you want to do is tracking. Find out much more about different Amiga RAM types and what they mean for ProTracker by reading [the guide I wrote in bootPT's documentation](https://github.com/echolevel/bootPT#the-protracker-users-guide-to-amiga-ram-types-limitations-and-expansions).

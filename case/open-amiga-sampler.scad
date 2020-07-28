@@ -41,50 +41,9 @@ module fullOuterCase() {
             translate([0, -(boxDepth - boxWallThickness) / 2, 0])
                 rotate([90, 0, 0])
                     roundedBox(size = [20, 10.5, boxWallThickness + 1], radius = 1, sidesonly = true);
-/*            
-            // L phono
-            translate([-boxWidth / 4, (boxDepth - boxWallThickness) / 2, 0])
-                rotate([90, 0, 0])
-                    cylinder(h = boxWallThickness + 1, r = 4, center = true);
-
-            // R phono
-            translate([boxWidth / 4, (boxDepth - boxWallThickness) / 2, 0])
-                rotate([90, 0, 0])
-                    cylinder(h = boxWallThickness + 1, r = 4, center = true);
-            
-            // Pot
-            translate([0, boxDepth / 4, (boxHeight - boxWallThickness) / 2])
-                cylinder(h = boxWallThickness + 1, r = 3, center = true);
-*/
         }
     }
 }
-
-module pressFitPlug(r1, h1, r2, h2) {
-    taper = 0.3;
-    union() {
-        translate([0, 0, 0])
-            cylinder(h = h1, r = r1, center = false);
-        translate([0, 0, h1])
-            cylinder(h = h2 - r2 * taper, r = r2, center = false, $fn = 8);
-        translate([0, 0, h1 + h2 - r2 * taper])
-            cylinder(h = r2 * 0.3, r1 = r2, r2 = r2 * (1.0 - taper), center = false, $fn = 8);
-    }
-};
-
-module pressFitReceptacle(r1, r2, h) {
-    taper = 0.3;
-    difference() {
-        translate([0, 0, 0])
-            cylinder(h = h, r = r1, center = false);
-        union() {
-            translate([0, 0, -0.1])
-                cylinder(h = h + 0.2, r = r2, center = false, $fn = 36);
-            translate([0, 0, h - (r1 - r2) * taper])
-                cylinder(h = (r1 - r2) * taper + 0.1, r1 = r2, r2 = r2 + (r1 - r2) * taper, center = false, $fn = 36);
-        }
-    }
-};
 
 module pcb() {
     difference() {
@@ -98,54 +57,125 @@ module pcb() {
     }
 }
 
-module pressFitParts(bottom) {
-    intersection() {
-        rotate([0, 180, 0])
+/*
+module snapFitClipAndLip() {
+    // Lip and snap fit clip
+    snapFitPoints = [
+                [0, 0],
+                [boxWallThickness * 0.5, -boxWallThickness * 0.5],
+                [boxWallThickness * 0.5, -boxWallThickness * 2.5 + boxWallThickness * 0.5],
+                [boxWallThickness * 0.25, -boxWallThickness * 2.5],
+    
+                [-boxWallThickness * 0.25, -boxWallThickness * 2.5 + boxWallThickness * 0.5],
+                [0, -boxWallThickness * 2.5 + boxWallThickness],
+                [0, -boxWallThickness * 1.5],
+            ];
+    
+    difference() {
+        rotate([90, 0, 0])
+            translate([-boxWidth * 0.5 + boxWallThickness, boxWallThickness, 0])
+                union() {
+                    linear_extrude(height = 5, center = true)
+                        polygon(snapFitPoints, 
+                        [
+                            [0, 1, 2],
+                            [0, 2, 3],
+                            [3, 4, 5],
+                            [0, 3, 5]
+                        ]);
+                    linear_extrude(height = boxDepth - boxWallThickness * 4 - 0.5, center = true)
+                        polygon(snapFitPoints, 
+                        [
+                            [0, 6, 2],
+                            [0, 1, 2]
+                        ]);
+                }
         union() {
-            // Middle
-            translate([0, -5.0, -boxHeight * 0.5])
-                pressFitReceptacle(r1 = 2.5, r2 = 1.25, h = (boxHeight - pcbThickness) * 0.5);
-            // Back left
-            translate([-boxWidth * 0.5 + boxWallThickness + 2.3, boxDepth * 0.5 - 2.3 - boxWallThickness, -boxHeight * 0.5])
-                pressFitReceptacle(r1 = 2.5, r2 = 1.25, h = boxHeight * (bottom ? 0.75 : 0.25));
-            // Back right
-            translate([boxWidth * 0.5 - boxWallThickness - 2.3, boxDepth * 0.5 - 2.3 - boxWallThickness, -boxHeight * 0.5])
-                pressFitReceptacle(r1 = 2.5, r2 = 1.25, h = boxHeight * (bottom ? 0.75 : 0.25));
+            clipGap = 1.0;
+            translate([-boxWidth * 0.5 + boxWallThickness * 1.5, 2.5 + clipGap * 0.5, -2.5])
+                cube([boxWallThickness + 0.01, clipGap, 5], center = true);
+            translate([-boxWidth * 0.5 + boxWallThickness * 1.5, -(2.5 + clipGap * 0.5), -2.5])
+                cube([boxWallThickness + 0.01, clipGap, 5], center = true);
         }
-        innerShell();
+    }
+}
+
+module snapFitHole() {
+    translate([boxWidth * 0.5 - boxWallThickness - 0.01, 0, 0])
+        rotate([-90, 0, 0])
+            linear_extrude(height = 7, center = true)
+                polygon([
+                    [0, -boxWallThickness * 1.6],
+                    [boxWallThickness * 0.33, -boxWallThickness],
+                    [0, -boxWallThickness * 0.4]
+                ], 
+                [
+                    [0, 1, 2]
+                ]);
+}
+*/
+
+snapFitLength = 10;
+
+module snapFitParts(top) {
+    length = (top ? snapFitLength : snapFitLength + 0.5);
+    thickness = (top ? boxWallThickness + 0.001 : boxWallThickness + 0.001 + 0.5);
+    clipSize = (top ? 1 : 1.1);
+    
+    for (a = [0 , 180]) {
+        rotate([0, 0, a]) {
+            translate([-(boxWidth - boxWallThickness) * 0.5, 0, 0])
+            {
+                cube([thickness, length, boxHeight], center = true);
+                translate([thickness * 0.5, 0, -boxHeight * 0.3])
+                    rotate([0, 45, 0])
+                        cube([clipSize, length, clipSize], center = true);
+            }
+        }
     }
 }
 
 module top() {
-    difference() {
-        union() {
-            difference() {
-                fullOuterCase();
-                union() {
-                    innerShell();
-                    translate([0, 0, -boxHeight * 0.5])
-                        cube([boxWidth + 1, boxDepth + 1, boxHeight], center = true);
+    union() {
+        difference() {
+            union() {
+                difference() {
+                    fullOuterCase();
+                    union() {
+                        innerShell();
+                        translate([0, 0, -boxHeight * 0.5])
+                            cube([boxWidth + 1, boxDepth + 1, boxHeight], center = true);
+                        ratio = 0.45;
+                        roundedBox(size = [ boxWidth - boxWallThickness * ratio * 2.0, boxDepth - boxWallThickness * ratio * 2.0, boxWallThickness], radius = boxRadius - (boxRadius - boxWallThickness) * ratio, sidesonly = true);
+                        innerShell();
+                    }
                 }
             }
-            
-            pressFitParts(false);
+            union() {
+                translate([0, boxDepth * 0.5 - 1, -boxHeight * 0.25])
+                    rotate([90, 0, 0])
+                        cube([connectorPlateWidth, boxHeight, boxWallThickness + boxRadius], center = true);
+                // Pot hole
+                translate([0, boxDepth * 0.1666 - 2.5, (boxHeight - boxWallThickness) * 0.5])
+                    cylinder(h = boxWallThickness + 0.01, r = 3.75, center = true);
+            }
         }
-        union() {
-            translate([0, boxDepth * 0.5 - 1, -boxHeight * 0.25])
-                rotate([90, 0, 0])
-                    cube([connectorPlateWidth, boxHeight, boxWallThickness + boxRadius], center = true);
-            // Pot hole
-            translate([0, boxDepth * 0.1666, (boxHeight - boxWallThickness) * 0.5])
-                cylinder(h = boxWallThickness + 0.01, r = 3.5, center = true);
+/*    
+        snapFitClipAndLip();
+        rotate([0, 0, 180])
+            snapFitClipAndLip();
+*/      
+        intersection() {
+            snapFitParts(top = true);
+            outerShell();
         }
     }
 }
 
 module bottom() {
     rotate([0, 180, 0])
-    union() {
-        difference()
-        {
+    difference() {
+        union() {
             union() {
                 difference() {
                     fullOuterCase();
@@ -156,19 +186,56 @@ module bottom() {
                     }
                 }
                 intersection() {
-                    translate([0, boxDepth * 0.5 - boxWallThickness * 0.5, boxHeight * 0.25])
-                        rotate([90, 0, 0])
-                            cube([connectorPlateWidth, boxHeight, boxWallThickness + boxRadius], center = true);
+                    ratio = 0.55;
+                    roundedBox(size = [ boxWidth - boxWallThickness * ratio * 2.0, boxDepth - boxWallThickness * ratio * 2.0, boxWallThickness], radius = boxRadius - (boxRadius - boxWallThickness) * ratio, sidesonly = true);
                     fullOuterCase();
                 }
             }
-            // Phono hole
-            translate([0, (boxDepth - boxWallThickness) * 0.5, 0])
-                rotate([90, 0, 0])
-                    cylinder(r = 3.5, h = boxWallThickness + 0.01, center = true);
-        }
+            intersection() {
+                // Connector plate
+                translate([0, boxDepth * 0.5 - boxWallThickness * 0.5, boxHeight * 0.25])
+                    rotate([90, 0, 0])
+                        cube([connectorPlateWidth, boxHeight, boxWallThickness + boxRadius], center = true);
+                fullOuterCase();
+            }
+            intersection() {
+                union() {
+                    // Back supports (because my printer is rubbish)
+                    translate([boxWidth * 0.5 - (boxWallThickness * 1.5), boxDepth * 0.5 - (boxWallThickness * 1.5), boxHeight * 0.125])
+                        cube([boxWallThickness, boxWallThickness, boxHeight * 0.75], center = true);
+                    translate([-boxWidth * 0.5 + (boxWallThickness * 1.5), boxDepth * 0.5 - (boxWallThickness * 1.5), boxHeight * 0.125])
+                        cube([boxWallThickness, boxWallThickness, boxHeight * 0.75], center = true);
+                    
+                    // Snapfit additive part. TODO(PJQ) slope at top to guide clips in
+                    for (a = [0 , 180]) {
+                        rotate([0, 0, a]) {
+                            translate([boxWidth * 0.5 - (boxWallThickness * 1.5), 0, boxHeight * 0.375])
+                            //cube([boxWallThickness, snapFitLength - 1, boxHeight * 0.5], center = true);
 
-        pressFitParts(true);
+                            rotate([90, 0, 0])
+                                linear_extrude(height = snapFitLength - 1, center = true)
+                                    polygon([
+                                        [-boxWallThickness * 0.5, boxHeight * 0.25], 
+                                        [ boxWallThickness * 0.5, boxHeight * 0.25], 
+                                        [-boxWallThickness * 0.5, -boxHeight * 0.25], 
+                                        [ boxWallThickness * 0.5, -boxHeight * 0.25 + boxWallThickness]
+                                    ],
+                                    [
+                                        [0, 1, 2],
+                                        [1, 2, 3]
+                                    ]);
+                        }
+                    }
+                }
+                outerShell();
+            }
+        }
+        // Phono hole
+        translate([0, (boxDepth - boxWallThickness) * 0.5, 0])
+            rotate([90, 0, 0])
+                cylinder(r = 3.5, h = boxWallThickness + 0.01, center = true);
+        rotate([0, 180, 0])
+            snapFitParts(top = false);
     }
 }
 
@@ -181,6 +248,7 @@ translate([-(boxWidth * 0.5 + 2), 0, 0])
 translate([(boxWidth * 0.5 + 2), 0, 0])
     color("blue")
     bottom();
+
 
 /*
 translate([0, 0, 0])
@@ -196,9 +264,10 @@ top();
 */
 
 /*
-translate([0, 0, 0])
+translate([0, 0, 1])
 color("red")
 top();
+translate([0, 0, -1])
 color("blue")
 bottom();
 */

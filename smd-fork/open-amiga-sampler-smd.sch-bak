@@ -437,7 +437,7 @@ U 1 1 5F2122D4
 P 6000 2150
 F 0 "RV1" V 5793 2150 50  0000 C CNN
 F 1 "R_POT" V 5884 2150 50  0000 C CNN
-F 2 "Connector_PinHeader_2.00mm:PinHeader_1x03_P2.00mm_Vertical" H 6000 2150 50  0001 C CNN
+F 2 "connectors:Pot pads" H 6000 2150 50  0001 C CNN
 F 3 "~" H 6000 2150 50  0001 C CNN
 	1    6000 2150
 	0    -1   1    0   
@@ -556,7 +556,7 @@ U 1 1 5F06ABE3
 P 2000 1450
 F 0 "J1" H 1928 1688 50  0000 C CNN
 F 1 "Left" H 1928 1597 50  0000 C CNN
-F 2 "Connector_PinHeader_2.00mm:PinHeader_1x02_P2.00mm_Vertical" H 2000 1450 50  0001 C CNN
+F 2 "connectors:Audio pads" H 2000 1450 50  0001 C CNN
 F 3 " ~" H 2000 1450 50  0001 C CNN
 	1    2000 1450
 	-1   0    0    -1  
@@ -567,7 +567,7 @@ U 1 1 5F069BFF
 P 2000 2050
 F 0 "J2" H 2099 1932 50  0000 L CNN
 F 1 "Right" H 2099 2023 50  0000 L CNN
-F 2 "Connector_PinHeader_2.00mm:PinHeader_1x02_P2.00mm_Vertical" H 2000 2050 50  0001 C CNN
+F 2 "connectors:Audio pads" H 2000 2050 50  0001 C CNN
 F 3 " ~" H 2000 2050 50  0001 C CNN
 	1    2000 2050
 	-1   0    0    1   

@@ -1,5 +1,5 @@
-$fa = 1;
-$fs = 0.4;
+//$fa = 1;
+//$fs = 0.4;
 
 use <MCAD/boxes.scad>
 
@@ -117,19 +117,62 @@ module snapFitHole() {
 
 snapFitLength = 10;
 
-module snapFitParts(top) {
-    length = (top ? snapFitLength : snapFitLength + 0.5);
-    thickness = (top ? boxWallThickness + 0.001 : boxWallThickness + 0.001 + 0.5);
-    clipSize = (top ? 1 : 1.1);
+module snapFitParts(top, subtract) {
+    length = (top ? snapFitLength : snapFitLength + 0.1);
+    thickness = (top ? boxWallThickness : boxWallThickness + 0.05) + 0.001;
+    clipDepth = (top ? 1.0 : 1.1);
+    clipCubeSize = sqrt(0.5 * (clipDepth * 2.0) * (clipDepth * 2.0));
     
-    for (a = [0 , 180]) {
-        rotate([0, 0, a]) {
-            translate([-(boxWidth - boxWallThickness) * 0.5, 0, 0])
-            {
-                cube([thickness, length, boxHeight], center = true);
-                translate([thickness * 0.5, 0, -boxHeight * 0.3])
-                    rotate([0, 45, 0])
-                        cube([clipSize, length, clipSize], center = true);
+    if (top == true) {
+        for (a = [0, 180]) {
+            rotate([0, 0, a]) {
+                translate([-(boxWidth - boxWallThickness) * 0.5, 0, 0])
+                {
+                    // Main clamp
+                    cube([thickness, length, boxHeight], center = true);
+                    translate([thickness * 0.5, 0, -boxHeight * 0.3])
+                        rotate([0, 45, 0])
+                            // Clip
+                            cube([clipCubeSize, length, clipCubeSize], center = true);
+                }
+           }
+        }
+    }
+    else {
+        // Fudge to get around weirdness at base
+        if (subtract == true) {
+            translate([0, 0, 0])
+                cube([boxWidth + 0.001, length, boxHeight - boxWallThickness * 2.0], center = true);
+            for (a = [0, 180]) {
+                rotate([0, 0, a]) {
+                    translate([-(boxWidth - thickness) * 0.5, 0, 0])
+                        cube([boxWallThickness + 0.001, length, boxHeight], center = true);
+               }
+            }
+        }
+        else {
+            for (a = [0 , 180]) {
+                rotate([0, 0, a]) {
+                    difference() {
+                        translate([boxWidth * 0.5 - (boxWallThickness + thickness * 0.5), 0, boxHeight * 0.375])
+                            rotate([90, 0, 0])
+                                linear_extrude(height = snapFitLength - 1, center = true)
+                                    polygon([
+                                        [-boxWallThickness * 0.5, boxHeight * 0.25], 
+                                        [ boxWallThickness * 0.5, boxHeight * 0.25], 
+                                        [-boxWallThickness * 0.5, -boxHeight * 0.25], 
+                                        [ boxWallThickness * 0.5, -boxHeight * 0.25 + boxWallThickness]
+                                    ],
+                                    [
+                                        [0, 1, 2],
+                                        [1, 2, 3]
+                                    ]);
+                        translate([boxWidth * 0.5 - (boxWallThickness + (thickness - boxWallThickness) * 0.5), 0, boxHeight * 0.3])
+                            rotate([0, 45, 0])
+                                // Clip
+                                cube([clipCubeSize, length, clipCubeSize], center = true);                    
+                    }
+                }
             }
         }
     }
@@ -160,13 +203,8 @@ module top() {
                     cylinder(h = boxWallThickness + 0.01, r = 3.75, center = true);
             }
         }
-/*    
-        snapFitClipAndLip();
-        rotate([0, 0, 180])
-            snapFitClipAndLip();
-*/      
         intersection() {
-            snapFitParts(top = true);
+            snapFitParts(top = true, subtract = false);
             outerShell();
         }
     }
@@ -174,81 +212,77 @@ module top() {
 
 module bottom() {
     rotate([0, 180, 0])
-    difference() {
-        union() {
+    union() {
+        difference() {
             union() {
-                difference() {
-                    fullOuterCase();
-                    union() {
-                        innerShell();
-                        translate([0, 0, -(boxHeight + 1) * 0.5])
-                            cube([boxWidth + 1, boxDepth + 1, boxHeight + 1], center = true);
+                union() {
+                    difference() {
+                        fullOuterCase();
+                        union() {
+                            innerShell();
+                            translate([0, 0, -(boxHeight + 1) * 0.5])
+                                cube([boxWidth + 1, boxDepth + 1, boxHeight + 1], center = true);
+                        }
+                    }
+                    intersection() {
+                        ratio = 0.55;
+                        roundedBox(size = [ boxWidth - boxWallThickness * ratio * 2.0, boxDepth - boxWallThickness * ratio * 2.0, boxWallThickness], radius = boxRadius - (boxRadius - boxWallThickness) * ratio, sidesonly = true);
+                        fullOuterCase();
                     }
                 }
                 intersection() {
-                    ratio = 0.55;
-                    roundedBox(size = [ boxWidth - boxWallThickness * ratio * 2.0, boxDepth - boxWallThickness * ratio * 2.0, boxWallThickness], radius = boxRadius - (boxRadius - boxWallThickness) * ratio, sidesonly = true);
+                    // Connector plate
+                    translate([0, boxDepth * 0.5 - boxWallThickness * 0.5, boxHeight * 0.25])
+                        rotate([90, 0, 0])
+                            cube([connectorPlateWidth, boxHeight, boxWallThickness + boxRadius], center = true);
                     fullOuterCase();
                 }
-            }
-            intersection() {
-                // Connector plate
-                translate([0, boxDepth * 0.5 - boxWallThickness * 0.5, boxHeight * 0.25])
-                    rotate([90, 0, 0])
-                        cube([connectorPlateWidth, boxHeight, boxWallThickness + boxRadius], center = true);
-                fullOuterCase();
-            }
-            intersection() {
-                union() {
-                    // Back supports (because my printer is rubbish)
-                    translate([boxWidth * 0.5 - (boxWallThickness * 1.5), boxDepth * 0.5 - (boxWallThickness * 1.5), boxHeight * 0.125])
-                        cube([boxWallThickness, boxWallThickness, boxHeight * 0.75], center = true);
-                    translate([-boxWidth * 0.5 + (boxWallThickness * 1.5), boxDepth * 0.5 - (boxWallThickness * 1.5), boxHeight * 0.125])
-                        cube([boxWallThickness, boxWallThickness, boxHeight * 0.75], center = true);
-                    
-                    // Snapfit additive part. TODO(PJQ) slope at top to guide clips in
-                    for (a = [0 , 180]) {
-                        rotate([0, 0, a]) {
-                            translate([boxWidth * 0.5 - (boxWallThickness * 1.5), 0, boxHeight * 0.375])
-                            //cube([boxWallThickness, snapFitLength - 1, boxHeight * 0.5], center = true);
-
-                            rotate([90, 0, 0])
-                                linear_extrude(height = snapFitLength - 1, center = true)
-                                    polygon([
-                                        [-boxWallThickness * 0.5, boxHeight * 0.25], 
-                                        [ boxWallThickness * 0.5, boxHeight * 0.25], 
-                                        [-boxWallThickness * 0.5, -boxHeight * 0.25], 
-                                        [ boxWallThickness * 0.5, -boxHeight * 0.25 + boxWallThickness]
-                                    ],
-                                    [
-                                        [0, 1, 2],
-                                        [1, 2, 3]
-                                    ]);
-                        }
+                intersection() {
+                    union() {
+                        // Back supports (because my printer is rubbish)
+                        translate([boxWidth * 0.5 - (boxWallThickness * 1.5), boxDepth * 0.5 - (boxWallThickness * 1.5), boxHeight * 0.125])
+                            cube([boxWallThickness, boxWallThickness, boxHeight * 0.75], center = true);
+                        translate([-boxWidth * 0.5 + (boxWallThickness * 1.5), boxDepth * 0.5 - (boxWallThickness * 1.5), boxHeight * 0.125])
+                            cube([boxWallThickness, boxWallThickness, boxHeight * 0.75], center = true);
                     }
+                    outerShell();
                 }
-                outerShell();
+            }
+            union() {
+                // Phono hole
+                translate([0, (boxDepth - boxWallThickness) * 0.5, 0])
+                    rotate([90, 0, 0])
+                        cylinder(r = 3.5, h = boxWallThickness + 0.01, center = true);
+                rotate([0, 180, 0])
+                    snapFitParts(top = false, subtract = true);
             }
         }
-        // Phono hole
-        translate([0, (boxDepth - boxWallThickness) * 0.5, 0])
-            rotate([90, 0, 0])
-                cylinder(r = 3.5, h = boxWallThickness + 0.01, center = true);
-        rotate([0, 180, 0])
-            snapFitParts(top = false);
+        intersection() {
+            snapFitParts(top = false, subtract = false);
+            outerShell();
+        }
     }
 }
 
+if (true)
+{
+    translate([-(boxWidth * 0.5 + 2), 0, 0])
+        rotate([0, 180, 0])
+            color("red")
+            top();
 
-translate([-(boxWidth * 0.5 + 2), 0, 0])
-    rotate([0, 180, 0])
-        color("red")
-        top();
-
-translate([(boxWidth * 0.5 + 2), 0, 0])
+    translate([(boxWidth * 0.5 + 2), 0, 0])
+        color("blue")
+        bottom();
+}
+else {
+    translate([0, 0, 0])
+    color("red")
+    top();
+    translate([0, 0, 0])
     color("blue")
     bottom();
-
+}
 
 /*
 translate([0, 0, 0])
@@ -263,11 +297,6 @@ color("red")
 top();
 */
 
-/*
-translate([0, 0, 1])
-color("red")
-top();
-translate([0, 0, -1])
-color("blue")
-bottom();
-*/
+
+
+

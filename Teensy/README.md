@@ -1,6 +1,5 @@
 ## Teensy Amiga Sampler Tester
 
-![samplers](../img/tester.jpg)
 
 We used this Teensy-based project to test original sampler carts and also our prototype builds of OAS without the risk of damage to our Amiga hardware.
 

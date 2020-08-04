@@ -1,7 +1,7 @@
 ## Teensy Amiga Sampler Tester
 
 
-We used this Teensy-based project to test original sampler carts and also our prototype builds of OAS without the risk of damage to our Amiga hardware.
+We used a Teensy 3.5 dev board to build a circuit that let us test original sampler carts, and also our prototype builds of OAS, without the risk of damaging our Amiga hardware.
 
 The .ino is annotated with hopefully enough clues to get you going, though I'll make a diagram when I have time.
 

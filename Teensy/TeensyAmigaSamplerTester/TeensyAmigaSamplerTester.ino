@@ -23,10 +23,6 @@
    -L is endianness (irrelevant with 8bit values)
    -e is encoding, signed int
 
-   Notes: Looks like strobe is sent by Amiga but it's a fixed speed from the CIA - you need to use
-   a custom interrupt request ($DFF01E) which I *think* in Protracker is the note period from the LUT.
-   So as far as we're concerned, that's basically the samplerate.
-
    Notes: the STROBE is sent by the Amiga's CIA chip at a fixed rate - ie the sample rate - after every
    data byte is read. On an Amiga this process is discrete/automatic, so from a programmer's perspective 
    the speed at which bytes are read (usually with an interrupt request - $DFF01E) is the desired sample 
@@ -65,7 +61,7 @@ const int chipSelect = BUILTIN_SDCARD;
 
 // the setup routine runs once when you press reset:
 void setup() {
-  //analogWriteFrequency(strobePin, 16574.2757);
+    
   // 8 contiguous bits on Teensy 3.5:
   /*
      D0 2
@@ -116,7 +112,7 @@ void setup() {
 void loop() {
 
   /*
-   * In case you need to test each bit
+   * In case you need to test each individual bit (can help diagnose continuity problems)
    * 
   String out;
   for (int i = 0; i < 8; i++) {

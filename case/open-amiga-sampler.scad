@@ -1,5 +1,5 @@
-//$fa = 1;
-//$fs = 0.4;
+$fa = 1;
+$fs = 0.4;
 
 use <MCAD/boxes.scad>
 
@@ -12,9 +12,6 @@ wedgeChunkiness = 3.0;
 wedgeProtrusion = 2.0;
 pcbThickness = 1.6;
 pcbDistanceFromEdge = 4.6;
-//screwHoleRadius = 1.125;
-//screwHeadRadius = 2.0;
-//screwSupportThickness = 1.25;
 
 connectorPlateWidth = boxWidth - boxWallThickness * 2.0;
 
@@ -57,156 +54,124 @@ module pcb() {
     }
 }
 
-/*
-module snapFitClipAndLip() {
-    // Lip and snap fit clip
-    snapFitPoints = [
-                [0, 0],
-                [boxWallThickness * 0.5, -boxWallThickness * 0.5],
-                [boxWallThickness * 0.5, -boxWallThickness * 2.5 + boxWallThickness * 0.5],
-                [boxWallThickness * 0.25, -boxWallThickness * 2.5],
-    
-                [-boxWallThickness * 0.25, -boxWallThickness * 2.5 + boxWallThickness * 0.5],
-                [0, -boxWallThickness * 2.5 + boxWallThickness],
-                [0, -boxWallThickness * 1.5],
-            ];
-    
-    difference() {
-        rotate([90, 0, 0])
-            translate([-boxWidth * 0.5 + boxWallThickness, boxWallThickness, 0])
-                union() {
-                    linear_extrude(height = 5, center = true)
-                        polygon(snapFitPoints, 
-                        [
-                            [0, 1, 2],
-                            [0, 2, 3],
-                            [3, 4, 5],
-                            [0, 3, 5]
-                        ]);
-                    linear_extrude(height = boxDepth - boxWallThickness * 4 - 0.5, center = true)
-                        polygon(snapFitPoints, 
-                        [
-                            [0, 6, 2],
-                            [0, 1, 2]
-                        ]);
-                }
-        union() {
-            clipGap = 1.0;
-            translate([-boxWidth * 0.5 + boxWallThickness * 1.5, 2.5 + clipGap * 0.5, -2.5])
-                cube([boxWallThickness + 0.01, clipGap, 5], center = true);
-            translate([-boxWidth * 0.5 + boxWallThickness * 1.5, -(2.5 + clipGap * 0.5), -2.5])
-                cube([boxWallThickness + 0.01, clipGap, 5], center = true);
-        }
-    }
-}
-
-module snapFitHole() {
-    translate([boxWidth * 0.5 - boxWallThickness - 0.01, 0, 0])
-        rotate([-90, 0, 0])
-            linear_extrude(height = 7, center = true)
-                polygon([
-                    [0, -boxWallThickness * 1.6],
-                    [boxWallThickness * 0.33, -boxWallThickness],
-                    [0, -boxWallThickness * 0.4]
-                ], 
-                [
-                    [0, 1, 2]
-                ]);
-}
-*/
+lipRatio = 0.45;
 
 snapFitLength = 10;
+snapFitHeight = 3.0;
+snapFitY = -4;
+snapFitTolerance = 0.5;
 
 module snapFitParts(top, subtract) {
-    length = (top ? snapFitLength : snapFitLength + 0.1);
-    thickness = (top ? boxWallThickness : boxWallThickness + 0.05) + 0.001;
-    clipDepth = (top ? 1.0 : 1.1);
-    clipCubeSize = sqrt(0.5 * (clipDepth * 2.0) * (clipDepth * 2.0));
-    
-    if (top == true) {
-        for (a = [0, 180]) {
-            rotate([0, 0, a]) {
-                translate([-(boxWidth - boxWallThickness) * 0.5, 0, 0])
-                {
-                    // Main clamp
-                    cube([thickness, length, boxHeight], center = true);
-                    translate([thickness * 0.5, 0, -boxHeight * 0.3])
-                        rotate([0, 45, 0])
-                            // Clip
-                            cube([clipCubeSize, length, clipCubeSize], center = true);
-                }
-           }
-        }
+    if (top == false && subtract == true) {
+        cube([boxWidth - boxWallThickness * 2.0 * lipRatio, snapFitLength + snapFitTolerance * 2, -snapFitY * 2.0], center = true);
+        translate([0, 0, snapFitY])
+            cube([boxWidth + 0.001, snapFitLength + snapFitTolerance * 2, snapFitHeight + snapFitTolerance * 2], center = true);
     }
-    else {
-        // Fudge to get around weirdness at base
-        if (subtract == true) {
-            translate([0, 0, 0])
-                cube([boxWidth + 0.001, length, boxHeight - boxWallThickness * 2.0], center = true);
-            for (a = [0, 180]) {
-                rotate([0, 0, a]) {
-                    translate([-(boxWidth - thickness) * 0.5, 0, 0])
-                        cube([boxWallThickness + 0.001, length, boxHeight], center = true);
-               }
-            }
-        }
-        else {
-            for (a = [0 , 180]) {
-                rotate([0, 0, a]) {
-                    difference() {
-                        translate([boxWidth * 0.5 - (boxWallThickness + thickness * 0.5), 0, boxHeight * 0.375])
-                            rotate([90, 0, 0])
-                                linear_extrude(height = snapFitLength - 1, center = true)
-                                    polygon([
-                                        [-boxWallThickness * 0.5, boxHeight * 0.25], 
-                                        [ boxWallThickness * 0.5, boxHeight * 0.25], 
-                                        [-boxWallThickness * 0.5, -boxHeight * 0.25], 
-                                        [ boxWallThickness * 0.5, -boxHeight * 0.25 + boxWallThickness]
-                                    ],
-                                    [
-                                        [0, 1, 2],
-                                        [1, 2, 3]
-                                    ]);
-                        translate([boxWidth * 0.5 - (boxWallThickness + (thickness - boxWallThickness) * 0.5), 0, boxHeight * 0.3])
-                            rotate([0, 45, 0])
-                                // Clip
-                                cube([clipCubeSize, length, clipCubeSize], center = true);                    
-                    }
-                }
-            }
+    
+    if (top == true && subtract == true) {
+        translate([0, 0, -boxWallThickness * 0.25])
+            cube([boxWidth + 0.001, snapFitLength + snapFitTolerance * 2, boxWallThickness * 0.5 + 0.001], center = true);
+    }
+    
+    if (top == true && subtract == false) {
+        for (a = [0, 180]) {
+            rotate([0, 0, a])
+                translate([-boxWidth * 0.5 + boxWallThickness * 1.5, 0, 0])
+                    rotate([90, 0, 0])
+                        linear_extrude(height = snapFitLength, center = true)
+                            polygon([
+                                [-boxWallThickness * 0.5, boxHeight * 0.5], 
+                                [ boxWallThickness * 0.5, boxHeight * 0.5], 
+                                [-boxWallThickness * 1.5, snapFitY + snapFitHeight * 0.5], 
+                                [-boxWallThickness * 0.5, snapFitY + snapFitHeight * 0.5], 
+                                [ boxWallThickness * 0.5, snapFitY + snapFitHeight * 0.5], 
+                                [-boxWallThickness * 1.5, snapFitY - snapFitHeight * 0.5 + boxWallThickness], 
+                                [-boxWallThickness * 0.5, snapFitY - snapFitHeight * 0.5], 
+                                [ boxWallThickness * 0.5, snapFitY - snapFitHeight * 0.5]
+                            ],
+                            [
+                                [0, 1, 4],
+                                [0, 4, 3],
+                                [2, 3, 5],
+                                [5, 3, 6],
+                                [6, 3, 7],
+                                [7, 3, 4]
+                            ]);
+           
         }
     }
 }
 
+module connectorPanel(top, subtract) {
+    panelShrink = (top ? 0.5 : 0.0);
+    
+    if ((top == true && subtract == false) || (top == false && subtract == true)) {
+        union() {
+            // Panel
+            translate([0, boxDepth * 0.5 - boxWallThickness * (0.5 + (top ? (1 - lipRatio) : lipRatio) * 0.5), 0])
+                rotate([90, 0, 0])
+                    roundedBox(size = [
+                            boxWidth - boxRadius * 2 - panelShrink,
+                            boxHeight - boxRadius * 2 - panelShrink,
+                            boxWallThickness * (top ? lipRatio : (1 - lipRatio)) + (subtract ? 0.001 : 0)
+                        ],
+                        sidesonly = true, radius = 2.0);
+            translate([0, boxDepth * 0.5 - boxWallThickness * (top ? (1 - lipRatio) : lipRatio) * 0.5, 0])
+                rotate([90, 0, 0])
+                    roundedBox(size = [
+                            boxWidth - boxRadius * 2 - boxWallThickness - panelShrink,
+                            boxHeight - boxRadius * 2 - boxWallThickness - panelShrink,
+                            boxWallThickness * (top ? (1 - lipRatio) : lipRatio) + (subtract ? 0.001 : 0)
+                        ],
+                        sidesonly = true, radius = 1.0);
+        }
+    }
+    
+    if (top == true && subtract == true) {
+        // Phono hole
+        translate([0, (boxDepth - boxWallThickness) * 0.5, 0])
+            rotate([90, 0, 0])
+                cylinder(r = 3.5, h = boxWallThickness + 0.01, center = true);
+    }
+}
+
+topLipDrop = 0.25; // Compensation for height inaccuracy where 2 parts meet
+
 module top() {
-    union() {
-        difference() {
-            union() {
-                difference() {
-                    fullOuterCase();
-                    union() {
-                        innerShell();
-                        translate([0, 0, -boxHeight * 0.5])
-                            cube([boxWidth + 1, boxDepth + 1, boxHeight], center = true);
-                        ratio = 0.45;
-                        roundedBox(size = [ boxWidth - boxWallThickness * ratio * 2.0, boxDepth - boxWallThickness * ratio * 2.0, boxWallThickness], radius = boxRadius - (boxRadius - boxWallThickness) * ratio, sidesonly = true);
-                        innerShell();
+    difference() {
+        union() {
+            difference() {
+                union() {
+                    difference() {
+                        fullOuterCase();
+                        union() {
+                            translate([0, 0, -boxHeight * 0.5 + topLipDrop])
+                                cube([boxWidth + 1, boxDepth + 1, boxHeight], center = true);
+                            innerShell();
+                        }
+                    }
+                    intersection() {
+                        translate([0, 0, topLipDrop])
+                            roundedBox(size = [ boxWidth - boxWallThickness * (1 - lipRatio) * 2.0, boxDepth - boxWallThickness * (1 - lipRatio) * 2.0, boxWallThickness], radius = boxRadius - (boxRadius - boxWallThickness) * (1 - lipRatio), sidesonly = true);
+                        fullOuterCase();
                     }
                 }
+                union() {
+                    // Pot hole
+                    translate([0, boxDepth * 0.1666 - 2.5, (boxHeight - boxWallThickness) * 0.5])
+                        cylinder(h = boxWallThickness + 0.01, r = 3.75, center = true);
+                    snapFitParts(top = true, subtract = true);
+                }
             }
-            union() {
-                translate([0, boxDepth * 0.5 - 1, -boxHeight * 0.25])
-                    rotate([90, 0, 0])
-                        cube([connectorPlateWidth, boxHeight, boxWallThickness + boxRadius], center = true);
-                // Pot hole
-                translate([0, boxDepth * 0.1666 - 2.5, (boxHeight - boxWallThickness) * 0.5])
-                    cylinder(h = boxWallThickness + 0.01, r = 3.75, center = true);
+            intersection() {
+                union() {
+                    snapFitParts(top = true, subtract = false);
+                    connectorPanel(top = true, subtract = false);
+                }
+                outerShell();
             }
         }
-        intersection() {
-            snapFitParts(top = true, subtract = false);
-            outerShell();
-        }
+        connectorPanel(top = true, subtract = true);
     }
 }
 
@@ -219,53 +184,29 @@ module bottom() {
                     difference() {
                         fullOuterCase();
                         union() {
-                            innerShell();
                             translate([0, 0, -(boxHeight + 1) * 0.5])
                                 cube([boxWidth + 1, boxDepth + 1, boxHeight + 1], center = true);
+                            roundedBox(size = [
+                                    boxWidth - boxWallThickness * lipRatio * 2.0,
+                                    boxDepth - boxWallThickness * lipRatio * 2.0,
+                                    boxWallThickness
+                                ],
+                                radius = boxRadius - (boxRadius - boxWallThickness) * lipRatio, sidesonly = true);
+                            innerShell();
                         }
                     }
-                    intersection() {
-                        ratio = 0.55;
-                        roundedBox(size = [ boxWidth - boxWallThickness * ratio * 2.0, boxDepth - boxWallThickness * ratio * 2.0, boxWallThickness], radius = boxRadius - (boxRadius - boxWallThickness) * ratio, sidesonly = true);
-                        fullOuterCase();
-                    }
-                }
-                intersection() {
-                    // Connector plate
-                    translate([0, boxDepth * 0.5 - boxWallThickness * 0.5, boxHeight * 0.25])
-                        rotate([90, 0, 0])
-                            cube([connectorPlateWidth, boxHeight, boxWallThickness + boxRadius], center = true);
-                    fullOuterCase();
-                }
-                intersection() {
-                    union() {
-                        // Back supports (because my printer is rubbish)
-                        translate([boxWidth * 0.5 - (boxWallThickness * 1.5), boxDepth * 0.5 - (boxWallThickness * 1.5), boxHeight * 0.125])
-                            cube([boxWallThickness, boxWallThickness, boxHeight * 0.75], center = true);
-                        translate([-boxWidth * 0.5 + (boxWallThickness * 1.5), boxDepth * 0.5 - (boxWallThickness * 1.5), boxHeight * 0.125])
-                            cube([boxWallThickness, boxWallThickness, boxHeight * 0.75], center = true);
-                    }
-                    outerShell();
                 }
             }
             union() {
-                // Phono hole
-                translate([0, (boxDepth - boxWallThickness) * 0.5, 0])
-                    rotate([90, 0, 0])
-                        cylinder(r = 3.5, h = boxWallThickness + 0.01, center = true);
+                connectorPanel(top = false, subtract = true);
                 rotate([0, 180, 0])
                     snapFitParts(top = false, subtract = true);
             }
         }
-        intersection() {
-            snapFitParts(top = false, subtract = false);
-            outerShell();
-        }
     }
 }
 
-if (true)
-{
+if (true) {
     translate([-(boxWidth * 0.5 + 2), 0, 0])
         rotate([0, 180, 0])
             color("red")

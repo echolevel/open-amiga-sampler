@@ -7,16 +7,16 @@ The design consists of an inverting opamp circuit with variable gain which feeds
 
 ## BOM
 
-* 1x Maxim ADC0820CCN+
-* 1x Microchip MCP6002-I/P
+* 1x Maxim ADC0820CCM+ (SOIC-20 Package) - mouser P/N  700-ADC0820CCM
+* 1x Microchip MCP6001T-I/OT (SOT-23-5 package) - mouser P/N 579-MCP6001T-I/OTVAO
 * 1x DB25 plug connector
 * 2x RCA receptacles
-* 1x 330ohm resistor
-* 5x 1kohm resistors
+* 1x 0805 330ohm resistor 
+* 5x 0805 1kohm resistors
 * 1x 10kohm exponential potentimeter
-* 1x 47uf capacitor
-* 2x 10uf capacitors
-* 2x 0.1uf capacitors
+* 1x 4x5.3mm 47uf electrolytic capacitor
+* 2x 10uf Tantalum Case A or 1206 capacitors
+* 2x 0805 0.1uf capacitors
 
 ### Substitutions
 
@@ -24,8 +24,8 @@ The 10kohm potentiometer will give between 1x and 10x gain. A larger potentiomet
 
 ## Soldering
 
-All components are through-hole and should be relatively easy to solder even for a novice. Some components can be soldered to the back of the board and folded down to make the overall unit slimmer. One possible configuration is to solder C1, C2, C3 and C5 to the back of the board, and fold C4 down onto the front footprint of C3. We recommend soldering the DB25 connector first, followed by the passive components and leads, and finally the ICs. This reduces the chance of damaging the ICs with excessive heat.
+All on board components are surface mount but nothing smaller than 0805 and should be relatively easy to solder even for someone with a good base level of soldering and a bit of practice. The MCP6001 is a SOT-23-5 with a ~1mm pitch and represents the smallest component on the board. the Pot and RCA receptacles can be soldered with wire leads from the through hole pads
 
 ## Case
 
-We are working on a compact 3D printed case in an approriate form factor for all Amiga computers. You may be able to find an appropriate enclosure to build the device into, but if you intend to plug the device directly into your Amiga you will need to make sure that ports adjacent to the parallel port will not be impeded.
+This board is intended to fit inside a standard DB25 D-Sub shell. (a regular common grey one) but due to it's small size, a larger enclosure can also be used and a custom 3D printed one may get produced as well.

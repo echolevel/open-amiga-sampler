@@ -57,22 +57,25 @@ module pcb() {
 
 module screwParts(top, subtract) {
     screwThreadRadius = 1.0;
-    screwHeadRadius = 2.0;
-    screwHeadHeight = 2.0;
+    screwHeadRadius = 2.5;
     screwClearance = 0.4;
     
     translate([0, -5, 0]) {
         if (top == false) {
             if (subtract == false) {
-                translate([0, 0, boxHeight * 0.5 - (boxWallThickness * 2 + screwHeadHeight)])
-                    cylinder(r = screwHeadRadius + boxWallThickness + screwClearance, h = boxWallThickness * 2 + screwHeadHeight);
-                translate([0, 0, pcbThickness * 0.5])
-                    cylinder(r = screwThreadRadius + boxWallThickness + screwClearance, h = (boxHeight - pcbThickness) * 0.5);
+                translate([0, 0, boxHeight * 0.5 - epsilon])
+                    rotate([180, 0, 0])
+                        cylinder(r = screwHeadRadius + boxWallThickness, screwHeadRadius - (screwThreadRadius - screwClearance));
+                translate([0, 0, pcbThickness * 0.5 - epsilon])
+                    cylinder(r = screwThreadRadius + screwClearance + boxWallThickness, h = (boxHeight - pcbThickness) * 0.5);
             }
             else {
-                translate([0, 0, -boxHeight * 0.5 - epsilon]) {
-                    cylinder(r = screwHeadRadius + screwClearance, h = boxWallThickness + screwHeadHeight);
-                    cylinder(r = screwThreadRadius + screwClearance, h = boxHeight + epsilon);
+                translate([0, 0, boxHeight * 0.5 + epsilon])
+                    rotate([180, 0, 0]) {
+                    // Countersink
+                        cylinder(r1 = screwHeadRadius, r2 = screwThreadRadius + screwClearance, h = screwHeadRadius - (screwThreadRadius + screwClearance));
+                        // Hole
+                        cylinder(r = screwThreadRadius + screwClearance, h = boxHeight * 0.5);
                 }
             }
         }
@@ -80,11 +83,11 @@ module screwParts(top, subtract) {
         if (top == true) {
             if (subtract == false) {
                 translate([0, 0, pcbThickness * 0.5])
-                    cylinder(r = screwThreadRadius + boxWallThickness, h = (boxHeight - pcbThickness) * 0.5);
+                    cylinder(r = screwThreadRadius + boxWallThickness, h = (boxHeight - pcbThickness) * 0.5 - boxWallThickness + epsilon);
             }
             else {
-                translate([0, 0, pcbThickness * 0.5 - boxWallThickness * 2.0])
-                    cylinder(r = screwThreadRadius - 0.125, h = (boxHeight - pcbThickness) * 0.5);
+                translate([0, 0, pcbThickness * 0.5 - boxWallThickness * 2.0 + epsilon])
+                    cylinder(r = screwThreadRadius - 0.125, h = (boxHeight - pcbThickness) * 0.5 - boxWallThickness);
             }
         }
 
@@ -94,10 +97,10 @@ module screwParts(top, subtract) {
 epsilon = 0.001;
 
 module connectorPanel(top, subtract) {
+    curveRadius = 1.25;
+
     if ((top == true && subtract == false) || (top == false && subtract == true)) {
         union() {
-            curveRadius = 1.25;
-            
             // Inner
             size0 = (top ? (boxWallThickness - lipGap) : (boxWallThickness + lipGap));
             translate([0, boxDepth * 0.5 - boxWallThickness + size0 * 0.25, 0]) {
@@ -109,20 +112,30 @@ module connectorPanel(top, subtract) {
                         ],
                         sidesonly = true,
                         radius = curveRadius - (top ? lipGap : 0));
-                
+
+
                 for (a = [0, 180])
-                    rotate([(top ? 0 : 180), 0, a])
-                        difference() {
-                            x = -boxWidth * 0.5 + boxRadius + (top ? lipGap : 0);
-                            z = -(boxWallThickness * 0.5 - (top ? lipGap : 0));
-                            translate([ x + curveRadius * 0.5,
-                                        0,
-                                        z - curveRadius * 0.5])
+                    rotate([(top ? 0 : 180), 0, a]) {
+                        x = -boxWidth * 0.5 + boxRadius + (top ? lipGap : 0);
+                        z = -(boxWallThickness * 0.5 - (top ? lipGap : 0));
+                        if (top == true) {
+                            difference() {
+                                translate([ x + curveRadius * 0.5,
+                                            0,
+                                            z - curveRadius * 0.5])
+                                    cube([curveRadius, size0 * 0.5 + epsilon, curveRadius + epsilon], center = true);
+                                translate([x, 0, z - curveRadius])
+                                    rotate([90, 0, 0])
+                                        cylinder(r = curveRadius, h = size0 * 0.5 + 1.0, center = true);
+                            }
+                        } else
+                        {
+                            translate([ x + curveRadius * 0.5 + epsilon,
+                                    0,
+                                    z - curveRadius * 0.5])
                                 cube([curveRadius, size0 * 0.5 + epsilon, curveRadius + epsilon], center = true);
-                            translate([x, 0, z - curveRadius])
-                                rotate([90, 0, 0])
-                                    cylinder(r = curveRadius, h = size0 * 0.5 + 1.0, center = true);
                         }
+                    }
             }
             
             // Outer
@@ -148,6 +161,16 @@ module connectorPanel(top, subtract) {
                         }            
             }
         }
+    }
+    
+    if (top == false && subtract == true) {
+        // Lower
+        translate([0, boxDepth * 0.5 - boxWallThickness + (boxWallThickness + lipGap) * 0.25 - epsilon * 0.5, boxHeight * 0.5 - boxRadius - curveRadius * 0.5])
+            cube([boxWidth - (boxRadius + curveRadius) * 2, (boxWallThickness + lipGap) * 0.5 + epsilon, curveRadius], center = true);
+        
+        // Upper
+        /*translate([0, boxDepth * 0.5 - boxWallThickness + (boxWallThickness + lipGap) * 0.25 - epsilon * 0.5, lipGap * 0.99 + curveRadius])
+            cube([boxWidth - boxRadius * 2, (boxWallThickness + lipGap) * 0.5 + epsilon, curveRadius], center = true);*/
     }
     
     if (top == true && subtract == true) {
@@ -229,14 +252,13 @@ module bottom() {
             }
             union() {
                 connectorPanel(top = false, subtract = true);
-                rotate([0, 180, 0])
-                    screwParts(top = false, subtract = true);
+                screwParts(top = false, subtract = true);
             }
         }
     }
 }
 
-if (false) {
+if (true) {
     translate([-(boxWidth * 0.5 + 2), 0, 0])
         rotate([0, 180, 0])
             color("red")

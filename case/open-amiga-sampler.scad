@@ -3,18 +3,18 @@ $fs = 0.4;
 
 use <MCAD/boxes.scad>
 
-boxWidth = 30;
-boxHeight = 21;
-boxDepth = 30;
+db25Width = 41;
+
 boxRadius = 4;
+boxWidth = 53;//db25Width + boxRadius * 2 + 2;
+boxHeight = 19;
+boxDepth = 65.5;
 boxWallThickness = 2;
 lipGap = 0.4;
 wedgeChunkiness = 3.0;
 wedgeProtrusion = 2.0;
 pcbThickness = 1.6;
 pcbDistanceFromEdge = 4.6;
-
-connectorPlateWidth = boxWidth - boxWallThickness * 2.0;
 
 module outerShell() {
     roundedBox(size = [boxWidth, boxDepth, boxHeight], radius = boxRadius, sidesonly = false);
@@ -38,7 +38,7 @@ module fullOuterCase() {
             // DB25 hole
             translate([0, -(boxDepth - boxWallThickness) / 2, 0])
                 rotate([90, 0, 0])
-                    roundedBox(size = [20, 10.5, boxWallThickness + 1], radius = 1, sidesonly = true);
+                    roundedBox(size = [db25Width, 10.5, boxWallThickness + 1], radius = 1, sidesonly = true);
         }
     }
 }
@@ -60,38 +60,37 @@ module screwParts(top, subtract) {
     screwHeadRadius = 2.5;
     screwClearance = 0.4;
     
-    translate([0, -5, 0]) {
-        if (top == false) {
-            if (subtract == false) {
-                translate([0, 0, boxHeight * 0.5 - epsilon])
-                    rotate([180, 0, 0])
-                        cylinder(r = screwHeadRadius + boxWallThickness, screwHeadRadius - (screwThreadRadius - screwClearance));
-                translate([0, 0, pcbThickness * 0.5 - epsilon])
-                    cylinder(r = screwThreadRadius + screwClearance + boxWallThickness, h = (boxHeight - pcbThickness) * 0.5);
+    for (x = [-16, 16])
+        translate([x, -boxDepth * 0.5 + 37, 0]) {
+            if (top == false) {
+                if (subtract == false) {
+                    translate([0, 0, boxHeight * 0.5 - epsilon])
+                        rotate([180, 0, 0])
+                            cylinder(r = screwHeadRadius + boxWallThickness, screwHeadRadius - (screwThreadRadius - screwClearance));
+                    translate([0, 0, pcbThickness * 0.5 - epsilon])
+                        cylinder(r = screwThreadRadius + screwClearance + boxWallThickness, h = (boxHeight - pcbThickness) * 0.5);
+                }
+                else {
+                    translate([0, 0, boxHeight * 0.5 + epsilon])
+                        rotate([180, 0, 0]) {
+                        // Countersink
+                            cylinder(r1 = screwHeadRadius, r2 = screwThreadRadius + screwClearance, h = screwHeadRadius - (screwThreadRadius + screwClearance));
+                            // Hole
+                            cylinder(r = screwThreadRadius + screwClearance, h = boxHeight * 0.5);
+                    }
+                }
             }
-            else {
-                translate([0, 0, boxHeight * 0.5 + epsilon])
-                    rotate([180, 0, 0]) {
-                    // Countersink
-                        cylinder(r1 = screwHeadRadius, r2 = screwThreadRadius + screwClearance, h = screwHeadRadius - (screwThreadRadius + screwClearance));
-                        // Hole
-                        cylinder(r = screwThreadRadius + screwClearance, h = boxHeight * 0.5);
+           
+            if (top == true) {
+                if (subtract == false) {
+                    difference() {
+                        translate([0, 0, pcbThickness * 0.5])
+                            cylinder(r = screwThreadRadius + boxWallThickness, h = (boxHeight - pcbThickness) * 0.5 - boxWallThickness + epsilon);
+                        cylinder(r = screwThreadRadius - 0.125, h = (boxHeight - pcbThickness) * 0.5 - boxWallThickness);
+                    }
                 }
             }
         }
-       
-        if (top == true) {
-            if (subtract == false) {
-                translate([0, 0, pcbThickness * 0.5])
-                    cylinder(r = screwThreadRadius + boxWallThickness, h = (boxHeight - pcbThickness) * 0.5 - boxWallThickness + epsilon);
-            }
-            else {
-                translate([0, 0, pcbThickness * 0.5 - boxWallThickness * 2.0 + epsilon])
-                    cylinder(r = screwThreadRadius - 0.125, h = (boxHeight - pcbThickness) * 0.5 - boxWallThickness);
-            }
-        }
-
-    }
 }
 
 epsilon = 0.001;
@@ -113,29 +112,22 @@ module connectorPanel(top, subtract) {
                         sidesonly = true,
                         radius = curveRadius - (top ? lipGap : 0));
 
-
                 for (a = [0, 180])
                     rotate([(top ? 0 : 180), 0, a]) {
-                        x = -boxWidth * 0.5 + boxRadius + (top ? lipGap : 0);
-                        z = -(boxWallThickness * 0.5 - (top ? lipGap : 0));
-                        if (top == true) {
-                            difference() {
-                                translate([ x + curveRadius * 0.5,
-                                            0,
-                                            z - curveRadius * 0.5])
-                                    cube([curveRadius, size0 * 0.5 + epsilon, curveRadius + epsilon], center = true);
-                                translate([x, 0, z - curveRadius])
-                                    rotate([90, 0, 0])
-                                        cylinder(r = curveRadius, h = size0 * 0.5 + 1.0, center = true);
-                            }
-                        } else
-                        {
-                            translate([ x + curveRadius * 0.5 + epsilon,
+                    x = -boxWidth * 0.5 + boxRadius + (top ? lipGap : 0);
+                    z = -(boxWallThickness * 0.5 - (top ? lipGap : 0));
+                    
+                    difference() {
+                        translate([ x + curveRadius * 0.5,
                                     0,
                                     z - curveRadius * 0.5])
-                                cube([curveRadius, size0 * 0.5 + epsilon, curveRadius + epsilon], center = true);
-                        }
+                            cube([curveRadius + epsilon, size0 * 0.5 + epsilon, curveRadius + epsilon], center = true);
+                        translate([x, 0, z - curveRadius])
+                            rotate([90, 0, 0])
+                                cylinder(r = curveRadius, h = size0 * 0.5 + 1.0, center = true);
+                        
                     }
+                }
             }
             
             // Outer
@@ -163,21 +155,12 @@ module connectorPanel(top, subtract) {
         }
     }
     
-    if (top == false && subtract == true) {
-        // Lower
-        translate([0, boxDepth * 0.5 - boxWallThickness + (boxWallThickness + lipGap) * 0.25 - epsilon * 0.5, boxHeight * 0.5 - boxRadius - curveRadius * 0.5])
-            cube([boxWidth - (boxRadius + curveRadius) * 2, (boxWallThickness + lipGap) * 0.5 + epsilon, curveRadius], center = true);
-        
-        // Upper
-        /*translate([0, boxDepth * 0.5 - boxWallThickness + (boxWallThickness + lipGap) * 0.25 - epsilon * 0.5, lipGap * 0.99 + curveRadius])
-            cube([boxWidth - boxRadius * 2, (boxWallThickness + lipGap) * 0.5 + epsilon, curveRadius], center = true);*/
-    }
-    
     if (top == true && subtract == true) {
         // Phono hole
-        translate([0, (boxDepth - boxWallThickness) * 0.5, 0])
-            rotate([90, 0, 0])
-                cylinder(r = 3.5, h = boxWallThickness + 0.01, center = true);
+        for (x = [-13, 13])
+            translate([x, (boxDepth - boxWallThickness) * 0.5, 0])
+                rotate([90, 0, 0])
+                    cylinder(r = 3.5, h = boxWallThickness + 0.01, center = true);
     }
 }
 
@@ -210,7 +193,7 @@ module top() {
                 }
                 union() {
                     // Pot hole
-                    translate([0, boxDepth * 0.5 - boxRadius - 3.75 - 0.5, (boxHeight - boxWallThickness) * 0.5])
+                    translate([0, boxDepth * 0.5 - boxRadius - 12.5, (boxHeight - boxWallThickness) * 0.5])
                         cylinder(h = boxWallThickness + 0.01, r = 3.75, center = true);
                         screwParts(top = true, subtract = true);
                 }
@@ -258,11 +241,15 @@ module bottom() {
     }
 }
 
-if (true) {
+/*
+if (false) {
     translate([-(boxWidth * 0.5 + 2), 0, 0])
-        rotate([0, 180, 0])
+        rotate([0, 180, 0]) {
             color("red")
             top();
+            //translate([0, -boxDepth * 0.25 + 2.5, 0])
+            //    pcb();
+        }
 
     translate([(boxWidth * 0.5 + 2), 0, 0])
         color("blue")
@@ -276,12 +263,13 @@ else {
     color("blue")
     bottom();
 }
+*/
 
-/*
+
 translate([0, 0, 0])
     color("blue")
     bottom();
-*/
+
 
 /*
 rotate([0, 180, 0])

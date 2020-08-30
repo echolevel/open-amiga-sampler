@@ -6,7 +6,7 @@ use <MCAD/boxes.scad>
 db25Width = 41;
 
 boxRadius = 4;
-boxWidth = 53;//db25Width + boxRadius * 2 + 2;
+boxWidth = 54;//db25Width + boxRadius * 2 + 2;
 boxHeight = 19;
 boxDepth = 65.5;
 boxWallThickness = 2;
@@ -14,7 +14,6 @@ lipGap = 0.4;
 wedgeChunkiness = 3.0;
 wedgeProtrusion = 2.0;
 pcbThickness = 1.6;
-pcbDistanceFromEdge = 4.6;
 
 module outerShell() {
     roundedBox(size = [boxWidth, boxDepth, boxHeight], radius = boxRadius, sidesonly = false);
@@ -157,15 +156,16 @@ module connectorPanel(top, subtract) {
     
     if (top == true && subtract == true) {
         // Phono hole
-        for (x = [-13, 13])
+        for (x = [-14, 14])
             translate([x, (boxDepth - boxWallThickness) * 0.5, 0])
                 rotate([90, 0, 0])
                     cylinder(r = 3.5, h = boxWallThickness + 0.01, center = true);
     }
 }
 
-
 module top() {
+    potHoleHeight = boxWallThickness * 2.0;
+    
     difference() {
         union() {
             difference() {
@@ -190,11 +190,14 @@ module top() {
                         fullOuterCase();
                     }
                     screwParts(top = true, subtract = false);
+                    // Pot hole spacer
+                    translate([0, boxDepth * 0.5 - boxRadius - 12.5, boxHeight * 0.5 - potHoleHeight * 0.5 - epsilon])
+                        cylinder(h = potHoleHeight, r = 3.75 + 3.0, center = true);
                 }
                 union() {
                     // Pot hole
-                    translate([0, boxDepth * 0.5 - boxRadius - 12.5, (boxHeight - boxWallThickness) * 0.5])
-                        cylinder(h = boxWallThickness + 0.01, r = 3.75, center = true);
+                    translate([0, boxDepth * 0.5 - boxRadius - 12.5, boxHeight  * 0.5 - potHoleHeight * 0.5])
+                        cylinder(h = potHoleHeight + 0.01, r = 3.75, center = true);
                         screwParts(top = true, subtract = true);
                 }
             }
@@ -241,8 +244,8 @@ module bottom() {
     }
 }
 
-/*
-if (false) {
+
+if (true) {
     translate([-(boxWidth * 0.5 + 2), 0, 0])
         rotate([0, 180, 0]) {
             color("red")
@@ -263,13 +266,13 @@ else {
     color("blue")
     bottom();
 }
-*/
 
 
+/*
 translate([0, 0, 0])
     color("blue")
     bottom();
-
+*/
 
 /*
 rotate([0, 180, 0])
